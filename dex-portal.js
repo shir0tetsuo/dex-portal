@@ -1,4 +1,5 @@
 const express = require('express');
+const chalk = require('chalk');
 const X = express();
 const PORT = 4000;
 const fs = require("fs").promises;
@@ -175,6 +176,7 @@ X.get('/view/:id', async (req, res) => {
   pub_ver = await readFile('./part/pub_ver.html')
   top_head = await readFile('./part/top_head.html')
   tools = await readFile('./part/toolkit.html')
+  motd = await readFile('./part/motd.html')
   block_open = `<blockquote>`
   block_close = `</blockquote>`
 
@@ -217,13 +219,47 @@ X.get('/view/:id', async (req, res) => {
       USER = await readU(BYTE.owner_id);
     }
 
+    if (!BYTE.coordinate) {
+      BYTE.coordinate = `<b><span title="node-empty-in-database">(Error)</span></b>`
+    }
+
+    ident_img_array = [
+      '1_city','2_nIV','3_spar','4_spar','5_spar','6_defconstruct',
+      '7_railgun','8_nithya','9_dark','10_arirealm','11_arigate','12_NULL','13_astragate','14_lightgate','15_construct','16_wormhole'
+    ]
+
+    if (!BYTE.identity) {
+      BYTE.identity = 16
+    }
+
+    ident_img = `${ident_img_array[BYTE.identity-1]}.gif`
+
+    var disp_right = '';
+    disp_right = `<div class="display-corner-right"><img src="https://shadowsword.tk/img/avaira/${ident_img}">`
+    disp_right += `<div class="bottom-right">(${BYTE.identity})</div></div>`
+
+    var metadata = '(METADATA) NOT IMPLEMENTED';
+    metadata = `raw: ${id}<br>`
+    metadata += `xxx: ${xxx}<br>`
+    metadata += `yyy: ${yyy}<br><br><br>`
+    metadata += `address: ${zeroPad(xxx,3)}${zeroPad(yyy,3)}<br>`
+    metadata += `coordinate: ${BYTE.coordinate}<br>`
+    metadata += `lat,lon: <a href="https://www.google.com/maps/@${realLat}.0000000,${realLon}.0000000,8.0z">${realLat}.00,${realLon}.00</a><br>`
+    metadata += `ownership: <span title="${BYTE.owner_id}">M${BYTE.owner_id.toString().substring(0,5)}..</span>//<span title="${USER.user_id}">U${USER.user_id.toString().substring(0,5)}..</span><br>`
+    metadata += `description: <b>${BYTE.description}</b><br><br>`
+    metadata += `cost_silver: ${BYTE.silver}<br>`
+    metadata += `cost_gold: ${BYTE.gold}<br><br>`
+    metadata += `updated_at: ${BYTE.updatedAt}<br>`
+    metadata += `created_at: ${BYTE.createdAt}`
+
+
     // send response
     //console.log(BYTE)
 
     res_data = ''; // header data
     res_data += `${header}`
 
-    res_data += `<body>` // top left elements
+    res_data += `<body onLoad="loadPortal()">` // top left elements
     res_data += `<div class='display-topleft'><a href="https://shadowsword.tk/">SSTK//</a>`
     res_data += `<a href="/">DEX//</a>${zeroPad(xxx,3)}${zeroPad(yyy,3)} ${pub_ver}</div>`
 
@@ -231,14 +267,18 @@ X.get('/view/:id', async (req, res) => {
     res_data += `view`
     res_data += `</div></div>`
 
-    res_data += `${tools}`
+    res_data += `${tools}` // view and translate toolkit
 
-    res_data += `${block_open}test${block_close}`
+    res_data += `${block_open}(MAPVIEW) NOT IMPLEMENTED${block_close}`
+
+    res_data += `${block_open}<div class="dsp">${disp_right}${metadata}</div>${block_close}`
+
+    res_data += `${motd}`
 
 
     res_data += `</body>` // closing tag
 
-    console.log(200)
+    console.log(chalk.blueBright(`200 ${id}`))
     res.status(200).send(res_data)
   }
 })

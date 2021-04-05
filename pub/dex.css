@@ -28,6 +28,18 @@ a:hover {
   top: 0;
   z-index: 6;
 }
+
+.display-corner-right {
+  position: absolute;
+  top: 5px;
+  right: 0px;
+  z-index: 5;
+}
+
+.dsp {
+  position: relative;
+}
+
 .center-pos-align {
   margin: auto;
   text-align: center;
@@ -39,10 +51,33 @@ a:hover {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+input {
+  background-color: #2f3136;
+  color: white;
+}
+
+.bottom-right {
+  font-size: 16px !important;
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+}
+
 blockquote {
   width: auto;
+  min-width: 550px;
   padding-left: 5px;
+  padding-right: 5px;
   border-left: 3px solid #ababab;
   border-radius: 2px;
   background-color: #2f3136;
+}
+
+.toolkit {
+  width: auto;
+  padding-left: 10px;
+  min-width: 550px;
+  border-left: 3px solid #cdee00 !important;
+  background-image: url('../pub/about-bg.gif')
 }
