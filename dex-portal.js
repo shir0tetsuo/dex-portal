@@ -1,19 +1,27 @@
 const express = require('express');
 const X = express();
 const PORT = 4000;
+const fs = require("fs").promises;
 const Sequelize = require('sequelize')
 
 var MapController = require('./controller/mapcontroller.js')
 
+///////// FUNCTIONS ////////////////////////////////////////////////////////////
 function zeroPad(num, places) {
   var zero = places - num.toString().length + 1;
   return Array(+(zero > 0 && zero)).join("0") + num;
 }
-
-async function readM(addr){
-  return bit = await M.findOne({ where: { coordinate: addr }})
+//
+async function readFile(filePath) {
+  try {
+    const data = await fs.readFile(filePath);
+    //console.log(data.toString());
+    return data.toString()
+  } catch (error) {
+    console.error(`Got an error trying to read the file: ${error.message}`);
+  }
 }
-
+//
 function udummy() {
   data = {};
   data.user_id = 0;
@@ -24,7 +32,7 @@ function udummy() {
   data.mrecord = 0;
   return data
 }
-
+//
 function mdummy() {
   data = {};
   data.owner_id = 0;
@@ -35,13 +43,25 @@ function mdummy() {
   //data.mrecord = 0;
   return data
 }
-
-async function readU(uid){
-  user = await Users.findOne({ where: { user_id: uid }})
+//
+async function readM(addr) {
+  return bit = await M.findOne({
+    where: {
+      coordinate: addr
+    }
+  })
+}
+//
+async function readU(uid) {
+  user = await Users.findOne({
+    where: {
+      user_id: uid
+    }
+  })
   if (!user) return udummy();
   return user;
 }
-
+////////////////////////////////////////////////////////////////////////////////
 // SQLite3 Controller
 const sequelize = new Sequelize('database', 'username', 'password', {
   host: 'localhost',
@@ -50,7 +70,7 @@ const sequelize = new Sequelize('database', 'username', 'password', {
   storage: '../avaira/avaira.db',
 });
 
-// client.map
+///////// DATABASE DATA ////////////////////////////////////////////////////////
 const M = sequelize.define('mapdata', {
   coordinate: {
     type: Sequelize.STRING,
@@ -80,7 +100,7 @@ const M = sequelize.define('mapdata', {
     allowNull: false,
   },
 })
-
+//
 const Users = sequelize.define('users', {
   user_id: {
     type: Sequelize.STRING,
@@ -112,9 +132,10 @@ const Users = sequelize.define('users', {
     allowNull: false,
   }
 });
-
+//
 M.sync();
 Users.sync();
+////////////////////////////////////////////////////////////////////////////////
 
 // Listen Start
 X.listen(
@@ -123,14 +144,10 @@ X.listen(
 )
 
 // Parse as json
-X.use( express.json() )
-
+X.use(express.json())
 // load /img/ media from folder 'img'
-X.use('/pub', express.static('img'));
+X.use('/pub', express.static('pub'));
 X.use('/favicon.ico', express.static('favicon.ico'));
-//X.use(express.bodyParser());
-//X.use(express.cookieParser());
-//X.use(X.router);
 
 X.use(function(err, req, res, next) {
   console.error(err.stack);
@@ -139,13 +156,27 @@ X.use(function(err, req, res, next) {
 
 // .get or .post (or .delete?)
 
-X.get('/map/:id', MapController.map_view);
-//X.get('/map/:id', async (req, res) => {
-//  res.status(200).send(req.params)
-//})
+X.get('/', async (req, res) => {
+  index = await readFile('./index.html')
+  res.status(200).send(index)
+})
 
-// VIEW :id
-X.get('/node/:id', async (req, res) => {
+X.get('/test/:id', async (req, res) => MapController.test_view(req, res, M, Users));
+
+X.get('/filetest/:id', async (req, res) => {
+  partA = await readFile('./part/alpha.txt')
+  partB = await readFile('./part/bravo.txt')
+  parts = `${partA},${partB}`
+  res.status(200).send(parts)
+})
+
+X.get('/view/:id', async (req, res) => {
+  header = await readFile('./part/header.html')
+  pub_ver = await readFile('./part/pub_ver.html')
+  top_head = await readFile('./part/top_head.html')
+  tools = await readFile('./part/toolkit.html')
+  block_open = `<blockquote>`
+  block_close = `</blockquote>`
 
   const { id } = req.params;
 
@@ -155,29 +186,97 @@ X.get('/node/:id', async (req, res) => {
     })
   } else {
     // determine x,y
-    xxx = parseInt(id.slice(0,3))
-    yyy = parseInt(id.slice(3,6))
+    xxx = parseInt(id.slice(0, 3))
+    yyy = parseInt(id.slice(3, 6))
     // define technical limits
-    if (xxx >= 180) xxx = 179
-    if (yyy >= 360) yyy = 359
+    if (parseInt(xxx) >= 180) xxx = 179
+    if (parseInt(yyy) >= 360) yyy = 359
     // width, height of projection
     var xmin = parseInt(xxx) - 4,
-    xmax = parseInt(xxx) + 5,
-    ymin = parseInt(yyy) - 2,
-    ymax = parseInt(yyy) + 3;
+      xmax = parseInt(xxx) + 5,
+      ymin = parseInt(yyy) - 2,
+      ymax = parseInt(yyy) + 3;
     if (xmin < 0) xmin = 0;
     if (xmax >= 180) xmax = 179;
     if (ymin < 0) ymin = 0;
     if (ymax >= 360) ymax = 359;
     // "real" lat/lon
-    realLat = parseInt(xxx)-90
-    realLon = parseInt(yyy)-180
+    realLat = parseInt(xxx) - 90
+    realLon = parseInt(yyy) - 180
     // if system had to make correction
     var corrected = '';
-    if (parseInt(id.slice(0,3)) != xxx) corrected += 'xxx-corrected,'
-    if (parseInt(id.slice(3,6)) != yyy) corrected += 'yyy-corrected,'
+    if (parseInt(id.slice(0, 3)) != xxx) corrected += 'xxx-corrected,'
+    if (parseInt(id.slice(3, 6)) != yyy) corrected += 'yyy-corrected,'
     // load node data
-    BYTE = await readM(`${xxx}${yyy}`);
+    BYTE = await readM(`${zeroPad(xxx,3)}${zeroPad(yyy,3)}`);
+    if (!BYTE) {
+      BYTE = mdummy()
+      USER = udummy()
+      corrected += 'node-empty-in-database,'
+    } else {
+      USER = await readU(BYTE.owner_id);
+    }
+
+    // send response
+    //console.log(BYTE)
+
+    res_data = ''; // header data
+    res_data += `${header}`
+
+    res_data += `<body>` // top left elements
+    res_data += `<div class='display-topleft'><a href="https://shadowsword.tk/">SSTK//</a>`
+    res_data += `<a href="/">DEX//</a>${zeroPad(xxx,3)}${zeroPad(yyy,3)} ${pub_ver}</div>`
+
+    res_data += `${top_head}` // logo
+    res_data += `view`
+    res_data += `</div></div>`
+
+    res_data += `${tools}`
+
+    res_data += `${block_open}test${block_close}`
+
+
+    res_data += `</body>` // closing tag
+
+    console.log(200)
+    res.status(200).send(res_data)
+  }
+})
+
+// VIEW :id
+X.get('/node_json/:id', async (req, res) => {
+
+  const { id } = req.params;
+
+  if (id.length != 6 || isNaN(id)) {
+    res.status(406).send({
+      error: `request ${id} length != 6 or isNaN`
+    })
+  } else {
+    // determine x,y
+    xxx = parseInt(id.slice(0, 3))
+    yyy = parseInt(id.slice(3, 6))
+    // define technical limits
+    if (parseInt(xxx) >= 180) xxx = 179
+    if (parseInt(yyy) >= 360) yyy = 359
+    // width, height of projection
+    var xmin = parseInt(xxx) - 4,
+      xmax = parseInt(xxx) + 5,
+      ymin = parseInt(yyy) - 2,
+      ymax = parseInt(yyy) + 3;
+    if (xmin < 0) xmin = 0;
+    if (xmax >= 180) xmax = 179;
+    if (ymin < 0) ymin = 0;
+    if (ymax >= 360) ymax = 359;
+    // "real" lat/lon
+    realLat = parseInt(xxx) - 90
+    realLon = parseInt(yyy) - 180
+    // if system had to make correction
+    var corrected = '';
+    if (parseInt(id.slice(0, 3)) != xxx) corrected += 'xxx-corrected,'
+    if (parseInt(id.slice(3, 6)) != yyy) corrected += 'yyy-corrected,'
+    // load node data
+    BYTE = await readM(`${zeroPad(xxx,3)}${zeroPad(yyy,3)}`);
     if (!BYTE) {
       BYTE = mdummy()
       USER = udummy()
@@ -214,6 +313,8 @@ X.get('/node/:id', async (req, res) => {
         },
         node_ownership: {
           owner_id: BYTE.owner_id,
+          node_updatedAt: BYTE.updatedAt,
+          node_createdAt: BYTE.createdAt,
           user_id: USER.user_id,
           user_permission: USER.permission,
           user_level: USER.level,
