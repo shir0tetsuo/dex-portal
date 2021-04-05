@@ -1,0 +1,28 @@
+{
+  "name": "dex-portal",
+  "version": "1.0.0",
+  "description": "REST API TEST",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shir0tetsuo/dex-portal.git"
+  },
+  "author": "shadowsword#0179",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shir0tetsuo/dex-portal/issues"
+  },
+  "homepage": "https://github.com/shir0tetsuo/dex-portal#readme",
+  "dependencies": {
+    "canvas": "^2.7.0",
+    "chalk": "^4.1.0",
+    "express": "^4.17.1",
+    "moment": "^2.29.1",
+    "sequelize": "^6.6.2",
+    "socket.io": "^4.0.1",
+    "sqlite3": "^5.0.2"
+  }
+}
