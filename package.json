@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/shir0tetsuo/dex-portal#readme",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "canvas": "^2.7.0",
     "chalk": "^4.1.0",
     "express": "^4.17.1",

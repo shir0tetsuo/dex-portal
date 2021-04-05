@@ -1,5 +1,6 @@
 const express = require('express');
 const chalk = require('chalk');
+const bcrypt = require('bcrypt')
 const X = express();
 const PORT = 4000;
 const fs = require("fs").promises;
@@ -231,26 +232,31 @@ X.get('/view/:id', async (req, res) => {
     if (!BYTE.identity) {
       BYTE.identity = 16
     }
+    if (!BYTE.description || BYTE.description == 0) {
+      BYTE.description = `(No Description)`
+    }
 
     ident_img = `${ident_img_array[BYTE.identity-1]}.gif`
 
     var disp_right = '';
     disp_right = `<div class="display-corner-right"><img src="https://shadowsword.tk/img/avaira/${ident_img}">`
-    disp_right += `<div class="bottom-right">(${BYTE.identity})</div></div>`
+    disp_right += `<div class="bottom-right"><span title="identity">(${BYTE.identity})</span></div>`
+    disp_right += `<div class="top-gold"><span title="cost_gold">${BYTE.gold} G</span></div>`
+    disp_right += `<div class="top-silver"><span title="cost_silver">${BYTE.silver} S</span></div>`
+    disp_right += `<div class="bottom-left">${BYTE.coordinate}</div>`
+    disp_right += `</div>`
 
     var metadata = '(METADATA) NOT IMPLEMENTED';
     metadata = `raw: ${id}<br>`
     metadata += `xxx: ${xxx}<br>`
     metadata += `yyy: ${yyy}<br><br><br>`
     metadata += `address: ${zeroPad(xxx,3)}${zeroPad(yyy,3)}<br>`
-    metadata += `coordinate: ${BYTE.coordinate}<br>`
+    //metadata += `coordinate: ${BYTE.coordinate}<br>`
     metadata += `lat,lon: <a href="https://www.google.com/maps/@${realLat}.0000000,${realLon}.0000000,8.0z">${realLat}.00,${realLon}.00</a><br>`
-    metadata += `ownership: <span title="${BYTE.owner_id}">M${BYTE.owner_id.toString().substring(0,5)}..</span>//<span title="${USER.user_id}">U${USER.user_id.toString().substring(0,5)}..</span><br>`
-    metadata += `description: <b>${BYTE.description}</b><br><br>`
-    metadata += `cost_silver: ${BYTE.silver}<br>`
-    metadata += `cost_gold: ${BYTE.gold}<br><br>`
-    metadata += `updated_at: ${BYTE.updatedAt}<br>`
-    metadata += `created_at: ${BYTE.createdAt}`
+    metadata += `<br>ownership: <span title="${BYTE.owner_id}">M${BYTE.owner_id.toString().substring(0,5)}..</span>//<span title="${USER.user_id}">U${USER.user_id.toString().substring(0,5)}..</span><br>`
+    //metadata += `<br>description: <b>${BYTE.description}</b><br><br>`
+    //metadata += `updated_at: ${BYTE.updatedAt}<br>`
+    //metadata += `created_at: ${BYTE.createdAt}`
 
 
     // send response
@@ -260,8 +266,8 @@ X.get('/view/:id', async (req, res) => {
     res_data += `${header}`
 
     res_data += `<body onLoad="loadPortal()">` // top left elements
-    res_data += `<div class='display-topleft'><a href="https://shadowsword.tk/">SSTK//</a>`
-    res_data += `<a href="/">DEX//</a>${zeroPad(xxx,3)}${zeroPad(yyy,3)} ${pub_ver}</div>`
+    res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+    res_data += `<span title="Information"><a href="/">DEX//</a></span>${zeroPad(xxx,3)}${zeroPad(yyy,3)} ${pub_ver}</div>`
 
     res_data += `${top_head}` // logo
     res_data += `view`
@@ -271,7 +277,11 @@ X.get('/view/:id', async (req, res) => {
 
     res_data += `${block_open}(MAPVIEW) NOT IMPLEMENTED${block_close}`
 
+    res_data += `${block_open}<div style="font-size: 16px;">Description: <b>${BYTE.description}</b></div>${block_close}`
+
     res_data += `${block_open}<div class="dsp">${disp_right}${metadata}</div>${block_close}`
+
+    res_data += `${block_open}Updated: ${BYTE.updatedAt}<br>Created: ${BYTE.createdAt}${block_close}`
 
     res_data += `${motd}`
 
