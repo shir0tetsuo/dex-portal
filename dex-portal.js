@@ -162,7 +162,7 @@ X.use('/favicon.ico', express.static('favicon.ico'));
 
 X.use(function(err, req, res, next) {
   console.error(err.stack);
-  res.status(500).send('500 PLEASE CONTACT ADMINISTRATOR')
+  //res.status(500).send('500 PLEASE CONTACT ADMINISTRATOR')
 })
 
 // .get or .post (or .delete?)
@@ -174,20 +174,30 @@ X.get('/', async (req, res) => {
 
 X.get('/test/:id', async (req, res) => MapController.test_view(req, res, M, Users));
 
-X.get('/filetest/:id', async (req, res) => {
+X.get('/logoff', async (req, res) => {
+  let options = {
+    maxAge: Date.now(), // would expire after 15 minutes
+  }
+  res.set('location','/auth')
+  res.status(301).send()
+})
+
+/*X.get('/filetest/:id', async (req, res) => {
   partA = await readFile('./part/alpha.txt')
   partB = await readFile('./part/bravo.txt')
   parts = `${partA},${partB}`
   res.status(200).send(parts)
-})
+})*/
 
 /// AUTH START /////////////////////////////////////////////////////////////////
 X.get('/auth', async (req, res) => {
-  console.log(req.cookies)
+  //console.log(req.cookies)
   header = await readFile('./part/header.html')
   pub_ver = await readFile('./part/pub_ver.html')
   top_head = await readFile('./part/top_head.html')
   login = await readFile('./part/login.html')
+  logout_a = await readFile('./part/logout_p1.html')
+  logout_b = await readFile('./part/logout_p2.html')
   motd = await readFile('./part/motd.html')
   var res_data = '';
   res_data += `${header}`
@@ -195,10 +205,15 @@ X.get('/auth', async (req, res) => {
   res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
   res_data += `<span title="Information"><a href="/">DEX//</a></span>Gateway ${pub_ver}</div>`
   res_data += `${top_head}Authorize</div></div>`
-
-  res_data += `${login}`
+  if (req.cookies.user_email && req.cookies.hashed_pwd) {
+    res_data += `${logout_a}<b>${req.cookies.user_email}</b>, ${logout_b}`
+  } else {
+    res_data += `${login}`
+  }
 
   res_data += `${motd}`
+
+
 
   res.status(200).send(res_data)
 })
@@ -242,6 +257,12 @@ X.post('/auth/epost/:address', async (req, res) => {
 X.post('/auth/authorize', async (req, res) => {
   var user_email = req.body.user_email;
   var user_password = req.body.password;
+  // EMAIL AUTHENTICATION RULES
+  if (!user_email) {
+    return res.status(200).send({
+      authority: 5,
+    })
+  }
   if (!user_password || user_password.length < 8) {
     return res.status(200).send({
       authority: 0,
@@ -254,6 +275,7 @@ X.post('/auth/authorize', async (req, res) => {
       // redirect given response
       //res.set('location','/')
       //res.status(301).send()
+      console.log(chalk.greenBright(`200 Access Elevated by Server ${user_email}`))
       res.status(200).send({
         authority: 1,
         cookie: {
@@ -393,7 +415,7 @@ X.get('/view/:id', async (req, res) => {
 
     res_data += `</body>` // closing tag
 
-    console.log(chalk.blueBright(`200 ${id}`))
+    console.log(chalk.blueBright(`200 ${id} ${req.cookies.user_email}`))
     res.status(200).send(res_data)
   }
 })

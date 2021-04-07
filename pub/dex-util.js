@@ -55,18 +55,51 @@ function toast(id) {
   document.getElementById(id).style.display = 'block'
 }
 
+async function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+async function bakeCookieButton() {
+  controller = document.getElementById('login-ctrl')
+  user_email = await getCookie('user_email')
+  if (user_email) {
+    var re = /@.*$/;
+    user_email = user_email.replace(re, "");
+    controller.innerHTML = user_email
+  } else {
+    controller.innerHTML = 'Login'
+  }
+}
+
 // must be onLoad event
 function loadPortal() {
   //https://www.w3schools.com/jsref/tryit.asp?filename=tryjsref_event_key_keycode2
   loadJSONSocket()
   loadAddressBar()
-  //loadLoginCtrl()
+  bakeCookieButton()
 }
 
 function loadGateway() {
   loadPassBar()
 }
 
+function rmCookies() {
+  document.cookie = `user_email=; maxAge=0; SameSite=none; path=/; Secure`
+  document.cookie = `hashed_pwd=; maxAge=0; SameSite=none; path=/; Secure`
+}
+
 function loadRegistrar() {
-  
+  // for registration
 }

@@ -31,13 +31,12 @@
           console.log(data)
             if (data.authority.toString() == '0') {
               toast('server_error')
-              document.getElementById('server_error').innerHTML = '<jsonbutton>Access Denied</jsonbutton><br>Blank Passwords or Passwords Less-Than 8 Characters are Forbidden';
-              console.log('TOASTED 0 ACCESS DENIED')
+              document.getElementById('server_error').innerHTML = '<jsonbutton>Access Denied</jsonbutton><br>Blank / Less-Than 8 Character Passwords are Forbidden';
             }
             if (data.authority.toString() == '1') {
               toast(data.toast)
               document.getElementById(data.toast).innerHTML = data.login;
-              document.cookie = `user_email=${data.cookie.user_email}; SameSite=none; path=/; Secure`;;
+              document.cookie = `user_email=${data.cookie.user_email}; SameSite=none; path=/; Secure`;
               document.cookie = `hashed_pwd=${data.cookie.hashed_pwd}; SameSite=none; path=/; Secure`;
               console.log(`cookies given`)
             }
@@ -46,6 +45,11 @@
             }
             if (data.authority.toString() == '4') {
               // bad password
+            }
+            if (data.authority.toString() == '5') {
+              // bad email
+              toast('server_error')
+              document.getElementById('server_error').innerHTML = '<jsonbutton>Access Denied</jsonbutton><br>A valid email address must be provided';
             }
           }
       });
