@@ -22,6 +22,7 @@ a:hover {
 }
 .display-topleft {
   font-size: 24px !important;
+  min-width: 600px;
   padding: 12px 24px !important;
   position: absolute;
   left: 0;
@@ -42,6 +43,7 @@ a:hover {
 
 .center-pos-align {
   margin: auto;
+  min-width: 600px;
   text-align: center;
   position: relative;
 }
@@ -88,7 +90,7 @@ input {
 
 blockquote {
   width: auto;
-  min-width: 550px;
+  min-width: 525px;
   padding-left: 5px;
   padding-right: 5px;
   border-left: 3px solid #ababab;
@@ -102,4 +104,40 @@ blockquote {
   min-width: 550px;
   border-left: 3px solid #cdee00 !important;
   background-image: url('../pub/about-bg.gif')
+}
+
+.extrusionbase {
+  position: relative;
+  display: inline-block;
+  border-bottom: 2px dotted white;
+}
+
+.extrusionbase .extrude {
+  visibility: hidden;
+  width: 400px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 5;
+  top: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.extrusionbase:hover .extrude {
+  visibility: visible;
+  opacity: 1;
+}
+
+randbutton {
+  color: #47f0d1
+}
+
+jsonbutton {
+  color: #ffa100
 }

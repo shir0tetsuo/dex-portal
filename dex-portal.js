@@ -247,13 +247,16 @@ X.get('/view/:id', async (req, res) => {
     disp_right += `</div>`
 
     var metadata = '(METADATA) NOT IMPLEMENTED';
-    metadata = `raw: ${id}<br>`
-    metadata += `xxx: ${xxx}<br>`
-    metadata += `yyy: ${yyy}<br><br><br>`
+    metadata = `<div class="extrusionbase"><b>Request: ${id}</b><span class="extrude">`
+    metadata += `X: ${xxx} `
+    metadata += `Y: ${yyy}<br><b>Ownership: ${BYTE.owner_id}</b><br>`
+    metadata += `M${BYTE.owner_id.toString().substring(0,5)}..//U${USER.user_id.toString().substring(0,5)}..<br>`
+    metadata += `COST: ${BYTE.gold} G, ${BYTE.silver} S`
+    metadata += `</span></div><br><br><br><br><br>`
     metadata += `address: ${zeroPad(xxx,3)}${zeroPad(yyy,3)}<br>`
     //metadata += `coordinate: ${BYTE.coordinate}<br>`
     metadata += `lat,lon: <a href="https://www.google.com/maps/@${realLat}.0000000,${realLon}.0000000,8.0z">${realLat}.00,${realLon}.00</a><br>`
-    metadata += `<br>ownership: <span title="${BYTE.owner_id}">M${BYTE.owner_id.toString().substring(0,5)}..</span>//<span title="${USER.user_id}">U${USER.user_id.toString().substring(0,5)}..</span><br>`
+    metadata += `<br><br>`
     //metadata += `<br>description: <b>${BYTE.description}</b><br><br>`
     //metadata += `updated_at: ${BYTE.updatedAt}<br>`
     //metadata += `created_at: ${BYTE.createdAt}`
@@ -281,7 +284,7 @@ X.get('/view/:id', async (req, res) => {
 
     res_data += `${block_open}<div class="dsp">${disp_right}${metadata}</div>${block_close}`
 
-    res_data += `${block_open}Updated: ${BYTE.updatedAt}<br>Created: ${BYTE.createdAt}${block_close}`
+    res_data += `${block_open}U: ${BYTE.updatedAt}<br>C: ${BYTE.createdAt}${block_close}`
 
     res_data += `${motd}`
 
