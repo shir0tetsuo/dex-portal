@@ -1,6 +1,9 @@
 const express = require('express');
 const chalk = require('chalk');
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt') // https://www.npmjs.com/package/bcrypt
+const saltRounds = 10;
+const bparse = require('body-parser') //https://codeforgeek.com/handle-get-post-request-express-4/
+const cookies = require('cookie-parser') //https://stackoverflow.com/questions/16209145/how-to-set-cookie-in-node-js-using-express-framework
 const X = express();
 const PORT = 4000;
 const fs = require("fs").promises;
@@ -139,6 +142,9 @@ M.sync();
 Users.sync();
 ////////////////////////////////////////////////////////////////////////////////
 
+const block_open = `<blockquote>`
+const block_close = `</blockquote>`
+
 // Listen Start
 X.listen(
   PORT,
@@ -146,7 +152,10 @@ X.listen(
 )
 
 // Parse as json
-X.use(express.json())
+X.use(express.json());
+X.use(bparse.urlencoded({ extended: false }));
+X.use(bparse.json());
+X.use(cookies())
 // load /img/ media from folder 'img'
 X.use('/pub', express.static('pub'));
 X.use('/favicon.ico', express.static('favicon.ico'));
@@ -172,14 +181,103 @@ X.get('/filetest/:id', async (req, res) => {
   res.status(200).send(parts)
 })
 
+/// AUTH START /////////////////////////////////////////////////////////////////
+X.get('/auth', async (req, res) => {
+  console.log(req.cookies)
+  header = await readFile('./part/header.html')
+  pub_ver = await readFile('./part/pub_ver.html')
+  top_head = await readFile('./part/top_head.html')
+  login = await readFile('./part/login.html')
+  motd = await readFile('./part/motd.html')
+  var res_data = '';
+  res_data += `${header}`
+  res_data += `<body onLoad="loadGateway()">` // top left elements
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<span title="Information"><a href="/">DEX//</a></span>Gateway ${pub_ver}</div>`
+  res_data += `${top_head}Authorize</div></div>`
+
+  res_data += `${login}`
+
+  res_data += `${motd}`
+
+  res.status(200).send(res_data)
+})
+
+/// AUTH START /////////////////////////////////////////////////////////////////
+X.get('/register', async (req, res) => {
+  header = await readFile('./part/header.html')
+  pub_ver = await readFile('./part/pub_ver.html')
+  top_head = await readFile('./part/top_head.html')
+  //login = await readFile('./part/login.html')
+  motd = await readFile('./part/motd.html')
+  var res_data = '';
+  res_data += `${header}`
+  res_data += `<body onLoad="loadRegistrar()">` // top left elements
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<span title="Information"><a href="/">DEX//</a></span>Gateway ${pub_ver}</div>`
+  res_data += `${top_head}Register</div></div>`
+
+  //res_data += `${login}`
+
+  res_data += `${motd}`
+
+  res.status(200).send(res_data)
+})
+
+X.post('/auth/epost/:address', async (req, res) => {
+  const { address } = req.params;
+  res.status(501).send(`NOT IMPLEMENTED (${address})`)
+})
+
+/*X.get('/auth/ucp', async (req, res) => {
+  // check cookies
+  // compare with system
+
+  console.log(req.body.user_email)
+  res.status(401).send({
+    authority: 0
+  })
+})*/
+
+X.post('/auth/authorize', async (req, res) => {
+  var user_email = req.body.user_email;
+  var user_password = req.body.password;
+  if (!user_password || user_password.length < 8) {
+    return res.status(200).send({
+      authority: 0,
+    })
+  } else {
+    bcrypt.hash(user_password, saltRounds, function(err, hash) {
+      //console.log(hash)
+      // compare password data here
+
+      // redirect given response
+      //res.set('location','/')
+      //res.status(301).send()
+      res.status(200).send({
+        authority: 1,
+        cookie: {
+          user_email: user_email,
+          hashed_pwd: hash
+        },
+        toast: 'server_error',
+        login: `<a href="/"><b>Access Granted</b></a>`,
+      })
+    });
+  }
+  //res.status(501).send('NOT IMPLEMENTED')
+})
+
+
+// MOSTLY DONE
+
 X.get('/view/:id', async (req, res) => {
+  let ReqDate = new Date();
   header = await readFile('./part/header.html')
   pub_ver = await readFile('./part/pub_ver.html')
   top_head = await readFile('./part/top_head.html')
   tools = await readFile('./part/toolkit.html')
   motd = await readFile('./part/motd.html')
-  block_open = `<blockquote>`
-  block_close = `</blockquote>`
 
   const { id } = req.params;
 
@@ -252,7 +350,11 @@ X.get('/view/:id', async (req, res) => {
     metadata += `Y: ${yyy}<br><b>Ownership: ${BYTE.owner_id}</b><br>`
     metadata += `M${BYTE.owner_id.toString().substring(0,5)}..//U${USER.user_id.toString().substring(0,5)}..<br>`
     metadata += `COST: ${BYTE.gold} G, ${BYTE.silver} S`
-    metadata += `</span></div><br><br><br><br><br>`
+
+    let PushDate = new Date();
+    var updateTime = PushDate.getTime()-ReqDate.getTime();
+
+    metadata += `</span></div><br><br><span style="font-family: devicons; font-weight: normal; font-style: normal; font-size: 20px;" >&#xe606</span> ${updateTime} ms<br><br><br>`
     metadata += `address: ${zeroPad(xxx,3)}${zeroPad(yyy,3)}<br>`
     //metadata += `coordinate: ${BYTE.coordinate}<br>`
     metadata += `lat,lon: <a href="https://www.google.com/maps/@${realLat}.0000000,${realLon}.0000000,8.0z">${realLat}.00,${realLon}.00</a><br>`
@@ -284,7 +386,7 @@ X.get('/view/:id', async (req, res) => {
 
     res_data += `${block_open}<div class="dsp">${disp_right}${metadata}</div>${block_close}`
 
-    res_data += `${block_open}U: ${BYTE.updatedAt}<br>C: ${BYTE.createdAt}${block_close}`
+    res_data += `${block_open}UP: ${BYTE.updatedAt}<br>CR: ${BYTE.createdAt}<br>RQ: ${new Date()}${block_close}`
 
     res_data += `${motd}`
 

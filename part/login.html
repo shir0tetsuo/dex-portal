@@ -1,0 +1,54 @@
+<blockquote>
+  <div class="loginbox">
+    <form>
+    <b>Email</b><br>
+  <input type="TEXT" id="user_email" size="40"><br><br>
+    <div class="extrusionbase"><b>Password:</b><span class="extrude">
+      A good password is at least<br><b>8+ characters long.</b><br>
+      </span></div><br>
+    <input type="password" id="password" size="40"><br><br>
+    <input type="button" id="submit" value="Submit"><br><br>
+    <span class="toast" id="server_error"></span>
+    </form>
+  </div>
+  <!-- javascript button protection? -->
+</blockquote>
+
+<blockquote>
+  Don't have an account? <a href="/register">Register Here</a>
+
+</blockquote>
+
+
+<script>
+  $(document).ready(function(){
+    var user_email,pass;
+    $("#submit").click(function(){
+      user_email=$("#user_email").val();
+      pass=$("#password").val();
+      $.post("/auth/authorize",{user_email: user_email,password: pass}, function(data){
+        if(data) {
+          console.log(data)
+            if (data.authority.toString() == '0') {
+              toast('server_error')
+              document.getElementById('server_error').innerHTML = '<jsonbutton>Access Denied</jsonbutton><br>Blank Passwords or Passwords Less-Than 8 Characters are Forbidden';
+              console.log('TOASTED 0 ACCESS DENIED')
+            }
+            if (data.authority.toString() == '1') {
+              toast(data.toast)
+              document.getElementById(data.toast).innerHTML = data.login;
+              document.cookie = `user_email=${data.cookie.user_email}; SameSite=none; path=/; Secure`;;
+              document.cookie = `hashed_pwd=${data.cookie.hashed_pwd}; SameSite=none; path=/; Secure`;
+              console.log(`cookies given`)
+            }
+            if (data.authority.toString() == '3') {
+              // doesn't exist
+            }
+            if (data.authority.toString() == '4') {
+              // bad password
+            }
+          }
+      });
+    });
+  });
+</script>

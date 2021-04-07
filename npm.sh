@@ -17,6 +17,8 @@ npm install --save express
 npm install --save sqlite3
 npm install --save bcrypt
 npm install --save chalk
+npm install --save cookie-parser
+npm install --save body-parser
 npm install --save sequelize
 npm install --save moment
 npm install --save canvas

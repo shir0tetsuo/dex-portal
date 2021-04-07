@@ -32,13 +32,41 @@ function loadAddressBar() {
   })
 }
 
+function loadPassBar() {
+  let addressIdent = window.location.href.slice(-6)
+  bar = document.getElementById("password");
+  bar.addEventListener("keyup", function(event) {
+    if (event.keyCode === 13) {
+      gotoSubmit()
+    }
+  })
+}
+
 function gotoBar() {
   ref = document.getElementById("abar").value;
   window.location.replace(`https://realmdex.shadowsword.tk/view/${ref}`)
 }
 
+function gotoSubmit() {
+  document.getElementById('submit').click();
+}
+
+function toast(id) {
+  document.getElementById(id).style.display = 'block'
+}
+
 // must be onLoad event
 function loadPortal() {
+  //https://www.w3schools.com/jsref/tryit.asp?filename=tryjsref_event_key_keycode2
   loadJSONSocket()
   loadAddressBar()
+  //loadLoginCtrl()
+}
+
+function loadGateway() {
+  loadPassBar()
+}
+
+function loadRegistrar() {
+  
 }

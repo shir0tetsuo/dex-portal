@@ -134,10 +134,20 @@ blockquote {
   opacity: 1;
 }
 
+.loginbox {
+  padding: 50px;
+  background-color: #212121;
+  border-radius: 1px solid #ccdb1d
+}
+
 randbutton {
   color: #47f0d1
 }
 
 jsonbutton {
   color: #ffa100
+}
+
+.toast {
+  display: none;
 }
