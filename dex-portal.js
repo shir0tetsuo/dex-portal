@@ -17,6 +17,14 @@ function zeroPad(num, places) {
   return Array(+(zero > 0 && zero)).join("0") + num;
 }
 //
+function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
+//
+function genID() {
+  return `1P${zeroPad(getRandomInt(999),3)}X${Date.now()}`
+}
+//
 async function readFile(filePath) {
   try {
     const data = await fs.readFile(filePath);
@@ -218,18 +226,23 @@ X.get('/logoff', async (req, res) => {
 })*/
 
 X.get('/register', async (req, res) => {
+  if (req.cookies && req.cookies.user_email.length > 3) return res.status(401).send('UNAUTHORIZED (ALREADY LOGGED IN)');
   header = await readFile('./part/header.html')
   pub_ver = await readFile('./part/pub_ver.html')
   top_head = await readFile('./part/top_head.html')
+  rules = await readFile('./part/registered_rules.html')
+  regsys = await readFile('./part/registration.html')
   //login = await readFile('./part/login.html')
   motd = await readFile('./part/motd.html')
   var res_data = '';
   res_data += `${header}`
   res_data += `<body onLoad="loadRegistrar()">` // top left elements
   res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
-  res_data += `<span title="Information"><a href="/">DEX//</a></span>Gateway ${pub_ver}</div>`
+  res_data += `<span title="Information"><a href="/">DEX//</a></span>Registration ${pub_ver}</div>`
   res_data += `${top_head}Register</div></div>`
 
+  res_data += `${rules}`
+  res_data += `${regsys}`
   //res_data += `${login}`
 
   res_data += `${motd}`
@@ -298,7 +311,7 @@ X.post('/auth/authorize', async (req, res) => {
     })
   } else {
     bcrypt.hash(user_password, saltRounds, function(err, hash) {
-      //console.log(hash)
+      console.log(hash)
     });
     //console.log(user_email)
     const portalUser = await readPortalU(user_email);
