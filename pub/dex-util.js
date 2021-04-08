@@ -35,11 +35,13 @@ function loadAddressBar() {
 function loadPassBar() {
   let addressIdent = window.location.href.slice(-6)
   bar = document.getElementById("password");
-  bar.addEventListener("keyup", function(event) {
-    if (event.keyCode === 13) {
-      gotoSubmit()
-    }
-  })
+  if (bar) {
+    bar.addEventListener("keyup", function(event) {
+      if (event.keyCode === 13) {
+        gotoSubmit()
+      }
+    })
+  }
 }
 
 function gotoBar() {
@@ -78,6 +80,8 @@ async function bakeCookieButton() {
     var re = /@.*$/;
     user_email = user_email.replace(re, "");
     controller.innerHTML = user_email
+    // navigate to UCP
+    controller.href = '';
   } else {
     controller.innerHTML = 'Login'
   }

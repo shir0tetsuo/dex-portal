@@ -35,6 +35,9 @@ function udummy() {
   data.permission = 0;
   data.level = 0;
   data.mrecord = 0;
+  data.portalemail = 0;
+  data.portalhash = 0;
+  data.portalban = false;
   return data
 }
 //
@@ -64,6 +67,17 @@ async function readU(uid) {
     }
   })
   if (!user) return udummy();
+  return user;
+}
+
+async function readPortalU(email) {
+  //console.log(email)
+  user = await Users.findOne({
+    where: {
+      portalemail: email
+    }
+  })
+  //if (!user) return udummy();
   return user;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,6 +149,23 @@ const Users = sequelize.define('users', {
     type: Sequelize.INTEGER,
     defaultValue: 0,
     allowNull: false,
+  },
+  portalemail: {
+    type: Sequelize.STRING,
+    defaultValue: 0,
+    allowNull: false,
+    unique: true,
+  },
+  portalhash: {
+    type: Sequelize.STRING,
+    defaultValue: 0,
+    allowNull: false,
+  },
+  portalban: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+    unique: true,
   }
 });
 //
@@ -175,9 +206,6 @@ X.get('/', async (req, res) => {
 X.get('/test/:id', async (req, res) => MapController.test_view(req, res, M, Users));
 
 X.get('/logoff', async (req, res) => {
-  let options = {
-    maxAge: Date.now(), // would expire after 15 minutes
-  }
   res.set('location','/auth')
   res.status(301).send()
 })
@@ -189,7 +217,28 @@ X.get('/logoff', async (req, res) => {
   res.status(200).send(parts)
 })*/
 
+X.get('/register', async (req, res) => {
+  header = await readFile('./part/header.html')
+  pub_ver = await readFile('./part/pub_ver.html')
+  top_head = await readFile('./part/top_head.html')
+  //login = await readFile('./part/login.html')
+  motd = await readFile('./part/motd.html')
+  var res_data = '';
+  res_data += `${header}`
+  res_data += `<body onLoad="loadRegistrar()">` // top left elements
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<span title="Information"><a href="/">DEX//</a></span>Gateway ${pub_ver}</div>`
+  res_data += `${top_head}Register</div></div>`
+
+  //res_data += `${login}`
+
+  res_data += `${motd}`
+
+  res.status(200).send(res_data)
+})
+
 /// AUTH START /////////////////////////////////////////////////////////////////
+
 X.get('/auth', async (req, res) => {
   //console.log(req.cookies)
   header = await readFile('./part/header.html')
@@ -218,27 +267,6 @@ X.get('/auth', async (req, res) => {
   res.status(200).send(res_data)
 })
 
-/// AUTH START /////////////////////////////////////////////////////////////////
-X.get('/register', async (req, res) => {
-  header = await readFile('./part/header.html')
-  pub_ver = await readFile('./part/pub_ver.html')
-  top_head = await readFile('./part/top_head.html')
-  //login = await readFile('./part/login.html')
-  motd = await readFile('./part/motd.html')
-  var res_data = '';
-  res_data += `${header}`
-  res_data += `<body onLoad="loadRegistrar()">` // top left elements
-  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
-  res_data += `<span title="Information"><a href="/">DEX//</a></span>Gateway ${pub_ver}</div>`
-  res_data += `${top_head}Register</div></div>`
-
-  //res_data += `${login}`
-
-  res_data += `${motd}`
-
-  res.status(200).send(res_data)
-})
-
 X.post('/auth/epost/:address', async (req, res) => {
   const { address } = req.params;
   res.status(501).send(`NOT IMPLEMENTED (${address})`)
@@ -258,7 +286,8 @@ X.post('/auth/authorize', async (req, res) => {
   var user_email = req.body.user_email;
   var user_password = req.body.password;
   // EMAIL AUTHENTICATION RULES
-  if (!user_email) {
+
+  if (!user_email || /...*@..*\..*$/.test(user_email) == false) {
     return res.status(200).send({
       authority: 5,
     })
@@ -270,22 +299,36 @@ X.post('/auth/authorize', async (req, res) => {
   } else {
     bcrypt.hash(user_password, saltRounds, function(err, hash) {
       //console.log(hash)
-      // compare password data here
-
-      // redirect given response
-      //res.set('location','/')
-      //res.status(301).send()
-      console.log(chalk.greenBright(`200 Access Elevated by Server ${user_email}`))
-      res.status(200).send({
-        authority: 1,
-        cookie: {
-          user_email: user_email,
-          hashed_pwd: hash
-        },
-        toast: 'server_error',
-        login: `<a href="/"><b>Access Granted</b></a>`,
-      })
     });
+    //console.log(user_email)
+    const portalUser = await readPortalU(user_email);
+    //console.log(portalUser)
+    // error 3 cannot find email
+    if (!portalUser || portalUser.portalemail == 0) return res.status(200).send({authority: 3,});
+    if (portalUser.portalban == true) return res.status(200).send({authority: 2,});
+    if (portalUser.portalemail) {
+      if (portalUser.portalhash == 0) return res.status(200).send({ authority: 4, })
+      if (bcrypt.compareSync(user_password, portalUser.portalhash)) {
+        console.log(chalk.greenBright(`200 Access Elevated by Server ${user_email}`))
+        res.status(200).send({
+          authority: 1,
+          cookie: {
+            user_email: user_email,
+            hashed_pwd: portalUser.portalhash
+          },
+          toast: 'server_error',
+          login: `<a href="/"><b>Access Granted</b></a>`,
+        })
+      } else {
+        res.status(200).send({
+          authority: 4,
+        })
+      }
+    } else {
+      res.status(200).send({
+        authority: 3,
+      })
+    }
   }
   //res.status(501).send('NOT IMPLEMENTED')
 })

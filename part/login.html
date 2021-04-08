@@ -40,11 +40,20 @@
               document.cookie = `hashed_pwd=${data.cookie.hashed_pwd}; SameSite=none; path=/; Secure`;
               console.log(`cookies given`)
             }
+            if (data.authority.toString() == '2') {
+              // banned
+              toast('server_error')
+              document.getElementById('server_error').innerHTML = '<jsonbutton>Access Denied</jsonbutton><br>You have been banned. Please contact the Administrator.';
+            }
             if (data.authority.toString() == '3') {
               // doesn't exist
+              toast('server_error')
+              document.getElementById('server_error').innerHTML = '<jsonbutton>Access Denied</jsonbutton><br>Email does not exist in our records.';
             }
             if (data.authority.toString() == '4') {
-              // bad password
+              // password error
+              toast('server_error')
+              document.getElementById('server_error').innerHTML = '<jsonbutton>Access Denied</jsonbutton><br>Invalid Password, or Database Error.';
             }
             if (data.authority.toString() == '5') {
               // bad email
