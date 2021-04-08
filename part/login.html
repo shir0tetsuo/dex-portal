@@ -39,6 +39,7 @@
               document.cookie = `user_email=${data.cookie.user_email}; SameSite=none; path=/; Secure`;
               document.cookie = `hashed_pwd=${data.cookie.hashed_pwd}; SameSite=none; path=/; Secure`;
               console.log(`cookies given`)
+              setTimeout(function(){ location.reload(); }, 5000);
             }
             if (data.authority.toString() == '2') {
               // banned

@@ -47,6 +47,11 @@ a:hover {
   text-align: center;
   position: relative;
 }
+
+.mainpagebox {
+  max-width: 300px;
+}
+
 .centered {
   position: absolute;
   top: 90%;

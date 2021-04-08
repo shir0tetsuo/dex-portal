@@ -317,7 +317,7 @@ X.post('/auth/authorize', async (req, res) => {
             hashed_pwd: portalUser.portalhash
           },
           toast: 'server_error',
-          login: `<a href="/"><b>Access Granted</b></a>`,
+          login: `<a href="/"><b>Access Granted</b></a><br>Reloading in 5sec.`,
         })
       } else {
         res.status(200).send({
@@ -333,6 +333,9 @@ X.post('/auth/authorize', async (req, res) => {
   //res.status(501).send('NOT IMPLEMENTED')
 })
 
+X.get('/ucp', async (req, res) => {
+  res.status(501).send('NOT IMPLEMENTED')
+})
 
 // MOSTLY DONE
 

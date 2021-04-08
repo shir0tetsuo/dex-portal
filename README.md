@@ -9,4 +9,6 @@ REST API + Express + Sqlite3 served on HTML
 /view/:id = Node ID/Address & Map Viewer
 /node_json/:id = Node Json Printer
 
+/ucp = (unimplemented) User Control Panel
+
 /user/:uid = (unimplemented) view user's data

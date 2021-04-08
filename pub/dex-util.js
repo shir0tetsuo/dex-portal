@@ -81,7 +81,7 @@ async function bakeCookieButton() {
     user_email = user_email.replace(re, "");
     controller.innerHTML = user_email
     // navigate to UCP
-    controller.href = '';
+    controller.href = '/ucp';
   } else {
     controller.innerHTML = 'Login'
   }
