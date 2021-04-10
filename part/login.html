@@ -2,22 +2,27 @@
   <div class="loginbox">
     <form>
     <b>Email</b><br>
-  <input type="TEXT" id="user_email" size="40"><br><br>
+  <input type="TEXT" id="user_email" onkeyup="return forceLower(this);" size="40"><br><br>
     <div class="extrusionbase"><b>Password</b><span class="extrude">
       A good password is at least<br><b>8+ characters long.</b><br>
       </span></div><br>
     <input type="password" id="password" size="40"><br><br>
-    <input type="button" id="submit" value="Submit"><br><br>
+    <div class="toast" id="confirmbox">
+      <input type="password" id="passwordconfirmation" placeholder="Confirm Password" onkeyup="compareKeys()" size="40"><br><br>
+    </div>
+    <div id="submitbox">
+      <input type="button" id="submit" value="Submit"><br><br>
+    </div>
     <span class="toast" id="server_error"></span>
     </form>
   </div>
   <!-- javascript button protection? -->
 </blockquote>
 
-<blockquote><br>
+<!--<blockquote><br>
   <a href="/register">Don't have an account? Register Here</a>
   <br><br>
-</blockquote>
+</blockquote>-->
 
 
 <script>
@@ -26,7 +31,8 @@
     $("#submit").click(function(){
       user_email=$("#user_email").val();
       pass=$("#password").val();
-      $.post("/auth/authorize",{user_email: user_email,password: pass}, function(data){
+      pwdcnf=$("#passwordconfirmation").val();
+      $.post("/auth/authorize",{user_email: user_email,password: pass, passwordconfirmation: pwdcnf}, function(data){
         if(data) {
           console.log(data)
             if (data.authority.toString() == '0') {
@@ -60,6 +66,18 @@
               // bad email
               toast('server_error')
               document.getElementById('server_error').innerHTML = '<jsonbutton>Access Denied</jsonbutton><br>A valid email address must be provided';
+            }
+            if (data.authority.toString() == '20') {
+              toast('server_error')
+              toast('confirmbox')
+              hide('submitbox')
+              document.getElementById('server_error').innerHTML = '<jsonbutton>Please Confirm Password</jsonbutton><br>Complete your registration by providing a password confirmation.';
+            }
+            if (data.authority.toString() == '21') {
+              toast('server_error')
+              hide('submitbox')
+              document.getElementById('server_error').innerHTML = '<b>Password Updated</b><br>Reloading the page.'
+              setTimeout(function(){ location.reload(); }, 5000);
             }
           }
       });

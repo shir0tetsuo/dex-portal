@@ -5,6 +5,21 @@ function zeroPad(num, places) {
   return Array(+(zero > 0 && zero)).join("0") + num;
 }
 
+function compareKeys() {
+  pwdbox = document.getElementById('password');
+  pwdcnf = document.getElementById('passwordconfirmation')
+  if (pwdbox.value == pwdcnf.value && pwdcnf.value.length > 7) {
+    toast('submitbox')
+  } else {
+    hide('submitbox')
+  }
+}
+
+function forceLower(strInput) {
+  strInput.value=strInput.value.toLowerCase();
+}
+
+
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
@@ -55,6 +70,10 @@ function gotoSubmit() {
 
 function toast(id) {
   document.getElementById(id).style.display = 'block'
+}
+
+function hide(id) {
+  document.getElementById(id).style.display = 'none'
 }
 
 async function getCookie(cname) {

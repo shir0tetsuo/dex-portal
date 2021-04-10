@@ -1,5 +1,6 @@
 const express = require('express');
 const chalk = require('chalk');
+require("dotenv").config();
 const bcrypt = require('bcrypt') // https://www.npmjs.com/package/bcrypt
 const saltRounds = 10;
 const bparse = require('body-parser') //https://codeforgeek.com/handle-get-post-request-express-4/
@@ -214,19 +215,12 @@ X.get('/', async (req, res) => {
 X.get('/test/:id', async (req, res) => MapController.test_view(req, res, M, Users));
 
 X.get('/logoff', async (req, res) => {
-  res.set('location','/auth')
+  res.set('location','/')
   res.status(301).send()
 })
 
-/*X.get('/filetest/:id', async (req, res) => {
-  partA = await readFile('./part/alpha.txt')
-  partB = await readFile('./part/bravo.txt')
-  parts = `${partA},${partB}`
-  res.status(200).send(parts)
-})*/
-
 X.get('/register', async (req, res) => {
-  if (req.cookies && req.cookies.user_email.length > 3) return res.status(401).send('UNAUTHORIZED (ALREADY LOGGED IN)');
+  if (req.cookies && req.cookies.user_email != undefined && req.cookies.user_email.length > 3) return res.status(401).send('UNAUTHORIZED (ALREADY LOGGED IN)');
   header = await readFile('./part/header.html')
   pub_ver = await readFile('./part/pub_ver.html')
   top_head = await readFile('./part/top_head.html')
@@ -258,6 +252,7 @@ X.get('/auth', async (req, res) => {
   pub_ver = await readFile('./part/pub_ver.html')
   top_head = await readFile('./part/top_head.html')
   login = await readFile('./part/login.html')
+  rules = await readFile('./part/registered_rules.html')
   logout_a = await readFile('./part/logout_p1.html')
   logout_b = await readFile('./part/logout_p2.html')
   motd = await readFile('./part/motd.html')
@@ -267,6 +262,7 @@ X.get('/auth', async (req, res) => {
   res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
   res_data += `<span title="Information"><a href="/">DEX//</a></span>Gateway ${pub_ver}</div>`
   res_data += `${top_head}Authorize</div></div>`
+  res_data += `${rules}`
   if (req.cookies.user_email && req.cookies.hashed_pwd) {
     res_data += `${logout_a}<b>${req.cookies.user_email}</b>, ${logout_b}`
   } else {
@@ -298,6 +294,8 @@ X.post('/auth/epost/:address', async (req, res) => {
 X.post('/auth/authorize', async (req, res) => {
   var user_email = req.body.user_email;
   var user_password = req.body.password;
+  var user_confirm = req.body.passwordconfirmation;
+  const hash = bcrypt.hashSync(user_password, saltRounds);
   // EMAIL AUTHENTICATION RULES
 
   if (!user_email || /...*@..*\..*$/.test(user_email) == false) {
@@ -310,14 +308,23 @@ X.post('/auth/authorize', async (req, res) => {
       authority: 0,
     })
   } else {
-    bcrypt.hash(user_password, saltRounds, function(err, hash) {
-      console.log(hash)
-    });
     //console.log(user_email)
     const portalUser = await readPortalU(user_email);
     //console.log(portalUser)
     // error 3 cannot find email
     if (!portalUser || portalUser.portalemail == 0) return res.status(200).send({authority: 3,});
+    if (portalUser.portalhash == 'REGISTER' && user_confirm != user_password) {
+      return res.status(200).send({
+        authority: 20,
+      });
+    }
+    if (portalUser.portalhash == 'REGISTER' && user_confirm == user_password) {
+      Users.update({ portalhash: hash },{ where: { portalemail: user_email }})
+      console.log('Hashed',hash,user_email)
+      return res.status(200).send({
+        authority: 21,
+      })
+    }
     if (portalUser.portalban == true) return res.status(200).send({authority: 2,});
     if (portalUser.portalemail) {
       if (portalUser.portalhash == 0) return res.status(200).send({ authority: 4, })

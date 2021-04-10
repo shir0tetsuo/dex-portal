@@ -4,3 +4,4 @@ avaira.d*
 avaira_*
 *.junk.*
 test.js
+.env
