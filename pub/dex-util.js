@@ -48,10 +48,17 @@ function loadAddressBar() {
 }
 
 function loadPassBar() {
-  let addressIdent = window.location.href.slice(-6)
   bar = document.getElementById("password");
+  bar_two = document.getElementById("passwordconfirmation")
   if (bar) {
     bar.addEventListener("keyup", function(event) {
+      if (event.keyCode === 13) {
+        gotoSubmit()
+      }
+    })
+  }
+  if (bar_two) {
+    bar_two.addEventListener("keyup", function(event) {
       if (event.keyCode === 13) {
         gotoSubmit()
       }
@@ -70,6 +77,15 @@ function gotoSubmit() {
 
 function toast(id) {
   document.getElementById(id).style.display = 'block'
+}
+
+function poptoast(id) {
+  var obj = document.getElementById(id);
+  if (obj.style.display != 'block') {
+    toast(id);
+  } else {
+    hide(id);
+  }
 }
 
 function hide(id) {

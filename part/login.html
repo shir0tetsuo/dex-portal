@@ -16,13 +16,7 @@
     <span class="toast" id="server_error"></span>
     </form>
   </div>
-  <!-- javascript button protection? -->
 </blockquote>
-
-<!--<blockquote><br>
-  <a href="/register">Don't have an account? Register Here</a>
-  <br><br>
-</blockquote>-->
 
 
 <script>
@@ -55,7 +49,8 @@
             if (data.authority.toString() == '3') {
               // doesn't exist
               toast('server_error')
-              document.getElementById('server_error').innerHTML = '<jsonbutton>Access Denied</jsonbutton><br>Email does not exist in our records.';
+              toast('confirmbox')
+              document.getElementById('server_error').innerHTML = '<jsonbutton>Access Denied</jsonbutton><br>Email does not exist in our records.<br>Create a new account by confirming your password.<br>Please note Legacy Accounts require an email sync via Discord.';
             }
             if (data.authority.toString() == '4') {
               // password error
@@ -77,6 +72,11 @@
               toast('server_error')
               hide('submitbox')
               document.getElementById('server_error').innerHTML = '<b>Password Updated</b><br>Reloading the page.'
+              setTimeout(function(){ location.reload(); }, 5000);
+            }
+            if (data.authority.toString() == '22') {
+              toast('server_error')
+              document.getElementById('server_error').innerHTML = `<b>Welcome, ${data.user_id}!</b><br>You can now login to the system.<br><br>Instance: ${data.start_instance}`
               setTimeout(function(){ location.reload(); }, 5000);
             }
           }

@@ -10,6 +10,8 @@ const PORT = 4000;
 const fs = require("fs").promises;
 const Sequelize = require('sequelize')
 
+let StartDate = new Date();
+
 var MapController = require('./controller/mapcontroller.js')
 
 ///////// FUNCTIONS ////////////////////////////////////////////////////////////
@@ -61,6 +63,41 @@ function mdummy() {
   return data
 }
 //
+async function newAccount(Users, user_id, user_email, hash) {
+  console.log(chalk.greenBright('201 REGISTERED',user_id,user_email))
+  data = {};
+  data.user_id = user_id;
+  data.silver = 10;
+  data.gold = 20;
+  data.permission = 0;
+  data.level = 0;
+  data.mrecord = 1;
+  data.portalemail = user_email;
+  data.portalhash = hash;
+  data.portalban = false;
+
+  try {
+    const tag = Users.create({
+      user_id: data.user_id,
+      permission: data.permission,
+      level: data.level,
+      silver: data.silver,
+      gold: data.gold,
+      mrecord: data.mrecord,
+      portalemail: data.portalemail,
+      portalhash: data.portalhash,
+      portalban: data.portalban,
+    }).catch(e => {
+      //console.log(e)
+    })
+  } catch (e) {
+    //if (e.name === 'SequelizeUniqueConstraintError') console.log(chalk.greenBright(`DOCUMENT EXIST ${user_id}`))
+  } finally {
+    //console.log(data)
+    console.log('202 Access Granted',data.portalemail, data.user_id)
+  }
+  // some Users write fn
+}
 async function readM(addr) {
   return bit = await M.findOne({
     where: {
@@ -219,29 +256,10 @@ X.get('/logoff', async (req, res) => {
   res.status(301).send()
 })
 
-X.get('/register', async (req, res) => {
-  if (req.cookies && req.cookies.user_email != undefined && req.cookies.user_email.length > 3) return res.status(401).send('UNAUTHORIZED (ALREADY LOGGED IN)');
-  header = await readFile('./part/header.html')
-  pub_ver = await readFile('./part/pub_ver.html')
-  top_head = await readFile('./part/top_head.html')
-  rules = await readFile('./part/registered_rules.html')
-  regsys = await readFile('./part/registration.html')
-  //login = await readFile('./part/login.html')
-  motd = await readFile('./part/motd.html')
-  var res_data = '';
-  res_data += `${header}`
-  res_data += `<body onLoad="loadRegistrar()">` // top left elements
-  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
-  res_data += `<span title="Information"><a href="/">DEX//</a></span>Registration ${pub_ver}</div>`
-  res_data += `${top_head}Register</div></div>`
-
-  res_data += `${rules}`
-  res_data += `${regsys}`
-  //res_data += `${login}`
-
-  res_data += `${motd}`
-
-  res.status(200).send(res_data)
+X.get('/start_instance', async (req, res) => {
+  res.status(200).send({
+    start_instance: StartDate
+  })
 })
 
 /// AUTH START /////////////////////////////////////////////////////////////////
@@ -299,11 +317,13 @@ X.post('/auth/authorize', async (req, res) => {
   // EMAIL AUTHENTICATION RULES
 
   if (!user_email || /...*@..*\..*$/.test(user_email) == false) {
+    // bad email
     return res.status(200).send({
       authority: 5,
     })
   }
   if (!user_password || user_password.length < 8) {
+    // no password or len < 8
     return res.status(200).send({
       authority: 0,
     })
@@ -312,7 +332,18 @@ X.post('/auth/authorize', async (req, res) => {
     const portalUser = await readPortalU(user_email);
     //console.log(portalUser)
     // error 3 cannot find email
-    if (!portalUser || portalUser.portalemail == 0) return res.status(200).send({authority: 3,});
+    if (!portalUser && user_confirm == user_password) {
+      const user_id = await genID()
+      const generation = await newAccount(Users, user_id, user_email, hash)
+      return res.status(200).send({
+        authority: 22,
+        user_id: user_id,
+        start_instance: StartDate,
+      })
+    }
+    if (!portalUser || portalUser.portalemail == 0) {
+      return res.status(200).send({authority: 3,});
+    }
     if (portalUser.portalhash == 'REGISTER' && user_confirm != user_password) {
       return res.status(200).send({
         authority: 20,
@@ -320,7 +351,7 @@ X.post('/auth/authorize', async (req, res) => {
     }
     if (portalUser.portalhash == 'REGISTER' && user_confirm == user_password) {
       Users.update({ portalhash: hash },{ where: { portalemail: user_email }})
-      console.log('Hashed',hash,user_email)
+      console.log(chalk.greenBright('200 AUTHORIZED/HASHED LEGACY',user_email))
       return res.status(200).send({
         authority: 21,
       })
@@ -345,9 +376,9 @@ X.post('/auth/authorize', async (req, res) => {
         })
       }
     } else {
-      res.status(200).send({
-        authority: 3,
-      })
+      return res.status(200).send({
+          authority: 3,
+        })
     }
   }
   //res.status(501).send('NOT IMPLEMENTED')
