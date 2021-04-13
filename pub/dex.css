@@ -41,6 +41,14 @@ a:hover {
   position: relative;
 }
 
+blue {
+  color: #0b9de4;
+}
+
+level {
+  color: #955eee;
+}
+
 .center-pos-align {
   margin: auto;
   min-width: 600px;
@@ -50,6 +58,12 @@ a:hover {
 
 .mainpagebox {
   max-width: 300px;
+}
+
+.userPropertyBox {
+  overflow-y: auto;
+  max-height: 400px;
+  background-color: #212121;
 }
 
 .centered {
@@ -84,6 +98,10 @@ input {
   position: absolute;
   top: 3px;
   left: 6px;
+}
+
+gold {
+  color: #c69a00;
 }
 
 .top-silver {
@@ -127,8 +145,8 @@ blockquote {
   padding: 5px 0;
   position: absolute;
   z-index: 5;
-  top: 125%;
-  left: 50%;
+  top: 94%;
+  left: 40%;
   margin-left: -60px;
   opacity: 0;
   transition: opacity 0.3s;

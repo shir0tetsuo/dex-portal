@@ -1,12 +1,17 @@
 const express = require('express');
 const chalk = require('chalk');
+
 require("dotenv").config();
+
 const bcrypt = require('bcrypt') // https://www.npmjs.com/package/bcrypt
 const saltRounds = 10;
+
 const bparse = require('body-parser') //https://codeforgeek.com/handle-get-post-request-express-4/
 const cookies = require('cookie-parser') //https://stackoverflow.com/questions/16209145/how-to-set-cookie-in-node-js-using-express-framework
-const X = express();
+
+const X = express(); //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
 const PORT = 4000;
+
 const fs = require("fs").promises;
 const Sequelize = require('sequelize')
 
@@ -19,25 +24,12 @@ function zeroPad(num, places) {
   var zero = places - num.toString().length + 1;
   return Array(+(zero > 0 && zero)).join("0") + num;
 }
-//
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
-//
 function genID() {
   return `1P${zeroPad(getRandomInt(999),3)}X${Date.now()}`
 }
-//
-async function readFile(filePath) {
-  try {
-    const data = await fs.readFile(filePath);
-    //console.log(data.toString());
-    return data.toString()
-  } catch (error) {
-    console.error(`Got an error trying to read the file: ${error.message}`);
-  }
-}
-//
 function udummy() {
   data = {};
   data.user_id = 0;
@@ -51,7 +43,6 @@ function udummy() {
   data.portalban = false;
   return data
 }
-//
 function mdummy() {
   data = {};
   data.owner_id = 0;
@@ -62,7 +53,15 @@ function mdummy() {
   //data.mrecord = 0;
   return data
 }
-//
+async function readFile(filePath) {
+  try {
+    const data = await fs.readFile(filePath);
+    //console.log(data.toString());
+    return data.toString()
+  } catch (error) {
+    console.error(`Got an error trying to read the file: ${error.message}`);
+  }
+}
 async function newAccount(Users, user_id, user_email, hash) {
   console.log(chalk.greenBright('201 REGISTERED',user_id,user_email))
   data = {};
@@ -105,7 +104,6 @@ async function readM(addr) {
     }
   })
 }
-//
 async function readU(uid) {
   user = await Users.findOne({
     where: {
@@ -115,7 +113,6 @@ async function readU(uid) {
   if (!user) return udummy();
   return user;
 }
-
 async function readPortalU(email) {
   //console.log(email)
   user = await Users.findOne({
@@ -126,15 +123,14 @@ async function readPortalU(email) {
   //if (!user) return udummy();
   return user;
 }
-////////////////////////////////////////////////////////////////////////////////
-// SQLite3 Controller
+// SQLITE CONTROLLER
 const sequelize = new Sequelize('database', 'username', 'password', {
   host: 'localhost',
   dialect: 'sqlite',
   logging: false,
   storage: '../avaira/avaira.db',
 });
-
+////////////////////////////////////////////////////////////////////////////////
 ///////// DATABASE DATA ////////////////////////////////////////////////////////
 const M = sequelize.define('mapdata', {
   coordinate: {
@@ -164,8 +160,7 @@ const M = sequelize.define('mapdata', {
     defaultValue: '0',
     allowNull: false,
   },
-})
-//
+});
 const Users = sequelize.define('users', {
   user_id: {
     type: Sequelize.STRING,
@@ -214,7 +209,6 @@ const Users = sequelize.define('users', {
     unique: true,
   }
 });
-//
 M.sync();
 Users.sync();
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,10 +216,11 @@ Users.sync();
 const block_open = `<blockquote>`
 const block_close = `</blockquote>`
 
+////////////////////////////////////////////////////////////////////////////////
 // Listen Start
 X.listen(
   PORT,
-  () => console.log(`Success at ${PORT}`)
+  () => console.log(`Connection Open @ localhost:${PORT}`)
 )
 
 // Parse as json
@@ -245,8 +240,33 @@ X.use(function(err, req, res, next) {
 // .get or .post (or .delete?)
 
 X.get('/', async (req, res) => {
-  index = await readFile('./index.html')
-  res.status(200).send(index)
+  header = await readFile('./part/header.html')
+  pub_ver = await readFile('./part/pub_ver.html')
+  top_head = await readFile('./part/top_head.html')
+  index = await readFile('./part/index2_infotext.html')
+  logos = await readFile('./part/index2_logos.html')
+  motd = await readFile('./part/motd.html')
+
+  if (req.cookies.user_email) req.cookies.user_email = `<a href="/ucp"><blue>${req.cookies.user_email}</blue></a>`
+  if (!req.cookies.user_email) req.cookies.user_email = "Not Logged In"
+
+  var res_data = '';
+  res_data += `${header}`
+  res_data += `<body>` // top left elements
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<span title="Jump To Random Location"><a href="#" onclick="getRandLoc()">DEX//</a></span>Information ${pub_ver}</div>`
+  res_data += `${top_head}information</div></div>${index}`
+  res_data += `${block_open}<div class="loginbox"><a href="/auth">Login/Logout</a> &nbsp;<span title="Jump To Random Location"><a href="#" onclick="getRandLoc()">Enter</a></span><br><br>(${req.cookies.user_email})</div>${block_close}`
+  res_data += `${block_open}<br>`
+  res_data += `System up since ${StartDate}<br><br>`
+  res_data += `${block_close}`
+
+  res_data += `${motd}`
+
+  res_data += `${logos}</body>`
+
+  console.log('200 /')
+  res.status(200).send(res_data)
 })
 
 X.get('/test/:id', async (req, res) => MapController.test_view(req, res, M, Users));
@@ -262,8 +282,19 @@ X.get('/start_instance', async (req, res) => {
   })
 })
 
-/// AUTH START /////////////////////////////////////////////////////////////////
 
+/*X.get('/auth/ucp', async (req, res) => {
+  // check cookies
+  // compare with system
+
+  console.log(req.body.user_email)
+  res.status(401).send({
+    authority: 0
+  })
+})*/
+
+
+/// AUTH START /////////////////////////////////////////////////////////////////
 X.get('/auth', async (req, res) => {
   //console.log(req.cookies)
   header = await readFile('./part/header.html')
@@ -289,25 +320,10 @@ X.get('/auth', async (req, res) => {
 
   res_data += `${motd}`
 
-
-
+  res_data += `</html>`
+  console.log(chalk.yellowBright('200 /auth'))
   res.status(200).send(res_data)
 })
-
-X.post('/auth/epost/:address', async (req, res) => {
-  const { address } = req.params;
-  res.status(501).send(`NOT IMPLEMENTED (${address})`)
-})
-
-/*X.get('/auth/ucp', async (req, res) => {
-  // check cookies
-  // compare with system
-
-  console.log(req.body.user_email)
-  res.status(401).send({
-    authority: 0
-  })
-})*/
 
 X.post('/auth/authorize', async (req, res) => {
   var user_email = req.body.user_email;
@@ -384,14 +400,164 @@ X.post('/auth/authorize', async (req, res) => {
   //res.status(501).send('NOT IMPLEMENTED')
 })
 
+////////////////////////////////////////////////////////////////////////////////
+
+X.get('/user/:uid', async (req, res) => {
+
+  errorfile = await readFile('./part/400.html')
+
+  if (req.cookies.user_email && req.cookies.hashed_pwd) {
+    user = await readPortalU(req.cookies.user_email);
+    if (user && req.cookies.hashed_pwd != user.portalhash) {
+      return res.status(406).send({
+        error: "ACCESS DENIED PORTAL HASH DOES NOT EQUAL COOKIE HASH",
+      })
+    }
+  }
+
+  const { uid } = req.params;
+
+  header = await readFile('./part/header.html')
+  pub_ver = await readFile('./part/pub_ver.html')
+  top_head = await readFile('./part/top_head.html')
+
+  errorReturn = `${header}${errorfile}`
+
+  if (!uid) return res.status(400).send(errorReturn)
+
+  res_data = ''; // header data
+  res_data += `${header}`
+
+  res_data += `<body onLoad="loadPortal()">` // top left elements
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<span title="Information"><a href="/">DEX//</a></span>${uid} ${pub_ver}</div>`
+
+  res_data += `${top_head}` // logo
+  res_data += `user`
+  res_data += `</div></div>`
+
+  var user = await readU(uid);
+
+  if (!user.user_id) return res.status(400).send(errorReturn)
+
+  if (!/.*P.*/.test(user.user_id)) {
+    var legacy = "&#11088;";
+  } else {
+    var legacy = "";
+  }
+
+  const tagList = await M.findAll({ where: { owner_id: user.user_id } })
+  Properties = tagList.length
+
+  var ownedSilverValue = 0, ownedGoldValue = 0;
+
+  for (i = 0; i < Properties; i++) {
+    ownedSilverValue += parseInt(tagList[i].silver),
+    ownedGoldValue += parseInt(tagList[i].gold)
+  }
+
+  var PropertyDetail = '';
+
+  if (Properties == 0) PropertyDetail = '(No Properties)'
+
+  for (i = 0; i < Properties; i++) {
+    if (tagList[i].description == 0) {
+      tagList[i].description = '<br>'
+    } else {
+      tagList[i].description += '<br>'
+    }
+    PropertyDetail += `<br><a href="/view/${tagList[i].coordinate}"><b>${tagList[i].coordinate}</b></a> // <gold>${tagList[i].gold} G</gold>, ${tagList[i].silver} S<br>&nbsp;${tagList[i].description}`
+  }
+
+  res_data += `${block_open}<div class="loginbox">`
+  res_data += `<b>${uid}</b>${legacy} // <level>Level ${user.level}</level> / <level>${user.mrecord} EXP</level> // <gold>${ownedGoldValue} G</gold>, ${ownedSilverValue} S <gold>in ${Properties} Nodes</gold>`
+  res_data += `</div>${block_close}`
+
+  res_data += `${block_open}<div class="userPropertyBox">`
+  res_data += `${PropertyDetail}`
+  res_data += `</div>${block_close}`
+
+  console.log(chalk.blueBright('200 user',uid,req.cookies.user_email))
+  res.status(200).send(res_data)
+    //if (!req.cookies.user_email)
+})
+
 X.get('/ucp', async (req, res) => {
-  res.status(501).send('NOT IMPLEMENTED')
+  if (req.cookies.user_email && req.cookies.hashed_pwd) {
+    user = await readPortalU(req.cookies.user_email);
+    if (user && req.cookies.hashed_pwd != user.portalhash) {
+      return res.status(406).send({
+        error: "ACCESS DENIED PORTAL HASH DOES NOT EQUAL COOKIE HASH",
+      })
+    }
+
+    header = await readFile('./part/header.html')
+    pub_ver = await readFile('./part/pub_ver.html')
+    top_head = await readFile('./part/top_head.html')
+
+    res_data = ''; // header data
+    res_data += `${header}`
+
+    res_data += `<body onLoad="loadPortal()">` // top left elements
+    res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+    res_data += `<span title="Information"><a href="/">DEX//</a></span>User Control Panel ${pub_ver}</div>`
+
+    res_data += `${top_head}` // logo
+    res_data += `ucp`
+    res_data += `</div></div>`
+
+    var re = /@.*$/;
+    email_small = req.cookies.user_email.replace(re, "")
+
+    if (!/.*P.*/.test(user.user_id)) {
+      var legacy = "&#11088; (legacy) ";
+    } else {
+      var legacy = "";
+    }
+
+    res_data += `${block_open}`
+    res_data += `<br><b>${email_small}</b> <a href="/auth">Logout</a><br><br>`
+    res_data += `ID: <a href="/user/${user.user_id}">${user.user_id}</a> <b>${legacy}</b><br>Email: ${user.portalemail}<br><br>`
+    res_data += `${block_close}`
+
+    res_data += `${block_open}<div class="loginbox">`
+    res_data += `<blue>Authority: ${user.permission}</blue><br>`
+    res_data += `<level>Level: ${user.level}</level> / <level>EXP: ${user.mrecord}</level><br><br>`
+    res_data += `<gold>${user.gold} G</gold>, ${user.silver} S <gold>available</gold> // `
+
+    const tagList = await M.findAll({ where: { owner_id: user.user_id } })
+    Properties = tagList.length
+
+    var ownedSilverValue = 0, ownedGoldValue = 0;
+
+    for (i = 0; i < tagList.length; i++) {
+      ownedSilverValue += parseInt(tagList[i].silver),
+      ownedGoldValue += parseInt(tagList[i].gold)
+    }
+
+    res_data += `<gold>${ownedGoldValue} G</gold>, ${ownedSilverValue} S <gold>in ${Properties} Nodes</gold>`
+    res_data += `${block_close}</div>`
+
+    console.log(chalk.yellowBright('200 /ucp',req.cookies.user_email))
+    res.status(200).send(res_data)
+
+  } else {
+    res.status(405).send('NOT LOGGED IN')
+  }
 })
 
 // MOSTLY DONE
 
 X.get('/view/:id', async (req, res) => {
   let ReqDate = new Date();
+  if (req.cookies.user_email && req.cookies.hashed_pwd) {
+    var user = await readPortalU(req.cookies.user_email);
+    if (user && req.cookies.hashed_pwd != user.portalhash) {
+      return res.status(406).send({
+        error: "ACCESS DENIED PORTAL HASH DOES NOT EQUAL COOKIE HASH",
+      })
+    }
+  }
   header = await readFile('./part/header.html')
   pub_ver = await readFile('./part/pub_ver.html')
   top_head = await readFile('./part/top_head.html')
@@ -453,6 +619,11 @@ X.get('/view/:id', async (req, res) => {
       BYTE.description = `(No Description)`
     }
 
+    var ownerlink = '', linkclose = '';
+    if (BYTE.owner_id != 0 && BYTE.owner_id != undefined) {
+      var ownerlink = `<a href="/user/${BYTE.owner_id}">`, linkclose = `</a>`
+    }
+
     ident_img = `${ident_img_array[BYTE.identity-1]}.gif`
 
     var disp_right = '';
@@ -464,9 +635,11 @@ X.get('/view/:id', async (req, res) => {
     disp_right += `</div>`
 
     var metadata = '(METADATA) NOT IMPLEMENTED';
-    metadata = `<div class="extrusionbase"><b>Request: ${id}</b><span class="extrude">`
+    var owner_flag = '';
+    if (user && user.user_id === BYTE.owner_id) var owner_flag = '(Owned)';
+    metadata = `<div class="extrusionbase"><b>Request: ${id} ${owner_flag}</b><span class="extrude">`
     metadata += `X: ${xxx} `
-    metadata += `Y: ${yyy}<br><b>Ownership: ${BYTE.owner_id}</b><br>`
+    metadata += `Y: ${yyy}<br>${ownerlink}Ownership: <b>${BYTE.owner_id}</b>${linkclose}<br>`
     metadata += `M${BYTE.owner_id.toString().substring(0,5)}..//U${USER.user_id.toString().substring(0,5)}..<br>`
     metadata += `COST: ${BYTE.gold} G, ${BYTE.silver} S`
 
