@@ -428,7 +428,7 @@ X.get('/user/:uid', async (req, res) => {
   res_data = ''; // header data
   res_data += `${header}`
 
-  res_data += `<body onLoad="loadPortal()">` // top left elements
+  res_data += `<body>` // top left elements
   res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
   res_data += `<span title="Information"><a href="/">DEX//</a></span>${uid} ${pub_ver}</div>`
 
@@ -466,7 +466,7 @@ X.get('/user/:uid', async (req, res) => {
     } else {
       tagList[i].description += '<br>'
     }
-    PropertyDetail += `<br><a href="/view/${tagList[i].coordinate}"><b>${tagList[i].coordinate}</b></a> // <gold>${tagList[i].gold} G</gold>, ${tagList[i].silver} S<br>&nbsp;${tagList[i].description}`
+    PropertyDetail += `<br><a href="/view/${tagList[i].coordinate}"><b>${tagList[i].coordinate}</b></a> // <gold>${tagList[i].gold} G</gold>, ${tagList[i].silver} S, <level>sov. ${tagList[i].updatedAt}</level><br>&nbsp;${tagList[i].description}`
   }
 
   res_data += `${block_open}<div class="loginbox">`
@@ -498,7 +498,7 @@ X.get('/ucp', async (req, res) => {
     res_data = ''; // header data
     res_data += `${header}`
 
-    res_data += `<body onLoad="loadPortal()">` // top left elements
+    res_data += `<body>` // top left elements
     res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
     res_data += `<span title="Information"><a href="/">DEX//</a></span>User Control Panel ${pub_ver}</div>`
 
@@ -619,6 +619,11 @@ X.get('/view/:id', async (req, res) => {
       BYTE.description = `(No Description)`
     }
 
+    var lvDisplay = '';
+    if (USER.level) {
+      lvDisplay = `Lv ${USER.level}`;
+    }
+
     var ownerlink = '', linkclose = '';
     if (BYTE.owner_id != 0 && BYTE.owner_id != undefined) {
       var ownerlink = `<a href="/user/${BYTE.owner_id}">`, linkclose = `</a>`
@@ -640,7 +645,7 @@ X.get('/view/:id', async (req, res) => {
     metadata = `<div class="extrusionbase"><b>Request: ${id} ${owner_flag}</b><span class="extrude">`
     metadata += `X: ${xxx} `
     metadata += `Y: ${yyy}<br>${ownerlink}Ownership: <b>${BYTE.owner_id}</b>${linkclose}<br>`
-    metadata += `M${BYTE.owner_id.toString().substring(0,5)}..//U${USER.user_id.toString().substring(0,5)}..<br>`
+    metadata += `M${BYTE.owner_id.toString().substring(0,5)}..//U${USER.user_id.toString().substring(0,5)}.. ${lvDisplay}<br>`
     metadata += `COST: ${BYTE.gold} G, ${BYTE.silver} S`
 
     let PushDate = new Date();
