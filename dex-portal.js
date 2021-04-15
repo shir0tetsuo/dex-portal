@@ -402,6 +402,8 @@ X.post('/auth/authorize', async (req, res) => {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+
 X.get('/user/:uid', async (req, res) => {
 
   errorfile = await readFile('./part/400.html')
@@ -621,8 +623,9 @@ X.get('/view/:id', async (req, res) => {
 
     var lvDisplay = '';
     if (USER.level) {
-      lvDisplay = `Lv ${USER.level}`;
+      lvDisplay = `${USER.level}`;
     }
+    if (!BYTE.owner_id) lvDisplay = 0;
 
     var ownerlink = '', linkclose = '';
     if (BYTE.owner_id != 0 && BYTE.owner_id != undefined) {
@@ -631,21 +634,37 @@ X.get('/view/:id', async (req, res) => {
 
     ident_img = `${ident_img_array[BYTE.identity-1]}.gif`
 
+    var box_provider = '';
+    if (req.cookies.user_email && req.cookies.hashed_pwd) var box_provider = `<a onclick="poptoast('ebox')"><span style="font-family: devicons; font-weight: normal; font-style: normal; font-size: 25px;" ><green>&#xe664;</green></span></a>`;
+
     var disp_right = '';
     disp_right = `<div class="display-corner-right"><img src="https://shadowsword.tk/img/avaira/${ident_img}">`
-    disp_right += `<div class="bottom-right"><span title="identity">(${BYTE.identity})</span></div>`
-    disp_right += `<div class="top-gold"><span title="cost_gold">${BYTE.gold} G</span></div>`
-    disp_right += `<div class="top-silver"><span title="cost_silver">${BYTE.silver} S</span></div>`
+    disp_right += `<div class="bottom-right"><span title="Identity">(${BYTE.identity})</span></div>`
+    disp_right += `<div class="top-gold"><span title="Cost Gold">${BYTE.gold} G</span></div>`
+    disp_right += `<div class="top-edgebar"><span title="Controls">${box_provider}</span></div>`
+    disp_right += `<div class="top-level"><level><span style="font-size: 20px !important;" title="Node Level">${lvDisplay}</span></level></div>`
+    disp_right += `<div class="top-silver"><span title="Cost Silver">${BYTE.silver} S</span></div>`
     disp_right += `<div class="bottom-left">${BYTE.coordinate}</div>`
     disp_right += `</div>`
 
     var metadata = '(METADATA) NOT IMPLEMENTED';
     var owner_flag = '';
-    if (user && user.user_id === BYTE.owner_id) var owner_flag = '(Owned)';
+    var edit_flag = '';
+
+    if (!USER) USER = {}, USER.level = 0
+
+    if (user && user.user_id != BYTE.owner_id && user.silver >= BYTE.silver && user.gold >= BYTE.gold && user.level >= USER.level) {
+      edit_flag = `<div class="editbox"><a href="/buy/${xxx}${yyy}">Purchase</a></div>`
+    }
+
+    if (user && user.user_id === BYTE.owner_id) {
+      var owner_flag = '(Owned)';
+      var edit_flag = `<div class="editbox"><a href="/edit/${xxx}${yyy}">Edit</a></div>`
+    }
     metadata = `<div class="extrusionbase"><b>Request: ${id} ${owner_flag}</b><span class="extrude">`
     metadata += `X: ${xxx} `
     metadata += `Y: ${yyy}<br>${ownerlink}Ownership: <b>${BYTE.owner_id}</b>${linkclose}<br>`
-    metadata += `M${BYTE.owner_id.toString().substring(0,5)}..//U${USER.user_id.toString().substring(0,5)}.. ${lvDisplay}<br>`
+    metadata += `M${BYTE.owner_id.toString().substring(0,5)}..//U${USER.user_id.toString().substring(0,5)}.. <br>`
     metadata += `COST: ${BYTE.gold} G, ${BYTE.silver} S`
 
     let PushDate = new Date();
@@ -663,6 +682,8 @@ X.get('/view/:id', async (req, res) => {
 
     // send response
     //console.log(BYTE)
+
+    if (!user) user = {}, user.level = 0, user.silver = 0, user.gold = 0;
 
     res_data = ''; // header data
     res_data += `${header}`
@@ -683,7 +704,33 @@ X.get('/view/:id', async (req, res) => {
 
     res_data += `${block_open}<div class="dsp">${disp_right}${metadata}</div>${block_close}`
 
-    res_data += `${block_open}UP: ${BYTE.updatedAt}<br>CR: ${BYTE.createdAt}<br>RQ: ${new Date()}${block_close}`
+    const failure = `<span class="segmentfail">`
+    const pass = `<span class="segmentpass">`
+
+    var levelPass = failure;
+    if (parseInt(lvDisplay) <= user.level) levelPass = pass;
+
+    var silverPass = failure;
+    if (BYTE.silver <= user.silver) silverPass = pass;
+
+    var goldPass = failure;
+    if (BYTE.gold <= user.gold) goldPass = pass;
+
+    //if (user.user_id)
+
+    res_data += `<blockquote class="toast tooldrop dsp" id="ebox">`
+    res_data += `<a>Level <level>${lvDisplay}</level> // <level>${user.level} (you)</level> ${levelPass}&#9679;</span></a><br>`
+    res_data += `<a>Silver ${BYTE.silver} // ${user.silver} (you) ${silverPass}&#9679;</span></a><br>`
+    res_data += `<a>Gold <gold>${BYTE.gold}</gold> // <gold>${user.gold} (you)</gold> ${goldPass}&#9679;</span></a>`
+    res_data += `${edit_flag}`
+    res_data += `${block_close}`
+
+    res_data += `${block_open}<div class="loginbox"><green><span title="Sovereignty">sov.: ${BYTE.updatedAt}</span></green>`
+    res_data += `<br><span title="Generated">gen.: ${BYTE.createdAt}</span>`
+    res_data += `<br><br><span title="Requested">req.: ${new Date()}</span>`
+    res_data += `<br><span title="Uptime">upt.: ${StartDate}</span>`
+
+    res_data += `</div>${block_close}`
 
     res_data += `${motd}`
 
@@ -739,7 +786,7 @@ X.get('/node_json/:id', async (req, res) => {
 
     // send response
     //console.log(BYTE)
-    console.log(200)
+    console.log('200 json',id,req.cookies.user_email)
     res.status(200).send({
       request: {
         raw: id,

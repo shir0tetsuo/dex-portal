@@ -100,8 +100,46 @@ input {
   left: 6px;
 }
 
+.top-level {
+  font-size: 14px !important;
+  color: #c69a00;
+  position: absolute;
+  top: -24px;
+  left: 126px;
+}
+
+.top-edgebar {
+  font-size: 14px !important;
+  color: #c69a00;
+  position: absolute;
+  bottom: 74px;
+  left: -26px;
+}
+
+.editbox {
+  position: absolute;
+  right: 35px;
+  top: 5px;
+}
+
+.segmentpass {
+  color: #16db17;
+}
+
+.segmentfail {
+  color: #e93100;
+}
+
 gold {
   color: #c69a00;
+}
+
+red {
+  color: #fc413b;
+}
+
+green {
+  color: #cdee00;
 }
 
 .top-silver {
@@ -125,6 +163,14 @@ blockquote {
   width: auto;
   padding-left: 10px;
   min-width: 550px;
+  border-left: 3px solid #cdee00 !important;
+  background-image: url('../pub/about-bg.gif')
+}
+
+.tooldrop {
+  width: auto;
+  padding-left: 10px;
+  min-width: 520px;
   border-left: 3px solid #cdee00 !important;
   background-image: url('../pub/about-bg.gif')
 }
