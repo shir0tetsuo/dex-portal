@@ -30,6 +30,70 @@ function getRandomInt(max) {
 function genID() {
   return `1P${zeroPad(getRandomInt(999),3)}X${Date.now()}`
 }
+async function generateNode(M,address) {
+  // write cell/node to database
+  try {
+    const block = M.create({
+      coordinate: address,
+      owner_id: 0,
+      silver: 2,
+      gold: 0,
+      identity: '0',
+      description: '0',
+    }).catch(err=>{
+      if (err.name === 'SequelizeUniqueConstraintError') {
+        //console.log('SYS',address,'NODE EXISTS')
+      }
+    })
+    //console.log('SYS',address,'NODE OK')
+  }
+  catch (e) {
+    console.log(e)
+  }
+}
+
+async function rMapNode(M,addr) {
+  return node = await M.findOne({ where: { coordinate: addr }})
+}
+
+async function generateMapComponents(M,x,y) {
+  // min/max
+  var xmin = parseInt(x) - 5,
+    xmax = parseInt(x) + 5,
+    ymin = parseInt(y) - 5,
+    ymax = parseInt(y) + 4;
+  if (xmin < 0) xmin = 0;
+  if (xmax >= 180) xmax = 179;
+  if (ymin < 0) ymin = 0;
+  if (ymax >= 360) ymax = 359;
+  var workload = [];
+  // loop through generation
+  await (async function loop() {
+    for (lat = xmin; lat < xmax; lat++) {
+      for (lon = ymin; lon < ymax; lon++) {
+        var xx = zeroPad(lat,3)
+        var yy = zeroPad(lon,3)
+        var address = `${xx}${yy}`
+        await generateNode(M,address);
+      }
+    }
+  })().then(r => {
+    console.log(chalk.greenBright('201 generateMapComponents X',xmin,xmax,'Y',ymin,ymax))
+  })
+
+  data = {};
+  data.xmin = xmin;
+  data.xmax = xmax;
+  data.ymin = ymin;
+  data.ymax = ymax;
+
+  return data;
+  // just calls generateNode function and puts it in cells
+  //console.log(workload)
+  //node = await rMapNode(M,x,y);
+  //
+  //return node.silver;
+}
 function udummy() {
   data = {};
   data.user_id = 0;
@@ -579,15 +643,6 @@ X.get('/view/:id', async (req, res) => {
     // define technical limits
     if (parseInt(xxx) >= 180) xxx = 179
     if (parseInt(yyy) >= 360) yyy = 359
-    // width, height of projection
-    var xmin = parseInt(xxx) - 4,
-      xmax = parseInt(xxx) + 5,
-      ymin = parseInt(yyy) - 2,
-      ymax = parseInt(yyy) + 3;
-    if (xmin < 0) xmin = 0;
-    if (xmax >= 180) xmax = 179;
-    if (ymin < 0) ymin = 0;
-    if (ymax >= 360) ymax = 359;
     // "real" lat/lon
     realLat = parseInt(xxx) - 90
     realLon = parseInt(yyy) - 180
@@ -595,6 +650,34 @@ X.get('/view/:id', async (req, res) => {
     var corrected = '';
     if (parseInt(id.slice(0, 3)) != xxx) corrected += 'xxx-corrected,'
     if (parseInt(id.slice(3, 6)) != yyy) corrected += 'yyy-corrected,'
+
+    maximus = await generateMapComponents(M,zeroPad(xxx,3),zeroPad(yyy,3))
+
+    glyph = '&#9679;';
+
+    var map_system = '<table>';
+
+    for (lon = maximus.ymax; lon > maximus.ymin; lon--) {
+      map_system += `<tr>`
+      for (lat = maximus.xmin; lat < maximus.xmax; lat++) {
+        var nhead = '', ntail = ''
+        addr = `${zeroPad(lat,3)}${zeroPad(lon,3)}`
+        NODE = await rMapNode(M,addr)
+        if (!NODE) NODE = await mdummy();
+        if (NODE.owner_id != 0) nhead = '<level>', ntail = '</level>'
+        if (NODE.description == 0) NODE.description = '(No Description)'
+        if (user && NODE.silver <= user.silver && NODE.gold <= user.gold) nhead = '<blue>', ntail = '</blue>'
+        if (NODE.owner_id == 0) nhead = '', ntail = '', NODE.owner_id = '(No Ownership)'
+        if (user && NODE.owner_id == user.user_id) nhead = '<gold>', ntail = '</gold>'
+        if (NODE.coordinate == `${xxx}${yyy}`) nhead = '<b>', ntail = "</b>"
+        map_system += `<td><a href="/view/${addr}"><span class="extrusionbase">${nhead}${glyph} ${addr}${ntail}`
+        map_system += `<div class="nodeextrude">${NODE.coordinate}<br>${NODE.description}<br>${NODE.owner_id}</div></span></a></td>`
+      }
+      map_system += `</tr>`
+    }
+
+    map_system += `</table>`
+
     // load node data
     BYTE = await readM(`${zeroPad(xxx,3)}${zeroPad(yyy,3)}`);
     if (!BYTE) {
@@ -624,8 +707,9 @@ X.get('/view/:id', async (req, res) => {
     var lvDisplay = '';
     if (USER.level) {
       lvDisplay = `${USER.level}`;
+    } else {
+      lvDisplay = 0;
     }
-    if (!BYTE.owner_id) lvDisplay = 0;
 
     var ownerlink = '', linkclose = '';
     if (BYTE.owner_id != 0 && BYTE.owner_id != undefined) {
@@ -651,15 +735,15 @@ X.get('/view/:id', async (req, res) => {
     var owner_flag = '';
     var edit_flag = '';
 
-    if (!USER) USER = {}, USER.level = 0
+    if (!USER) USER = {}, USER.level = 0;
 
     if (user && user.user_id != BYTE.owner_id && user.silver >= BYTE.silver && user.gold >= BYTE.gold && user.level >= USER.level) {
-      edit_flag = `<div class="editbox"><a href="/buy/${xxx}${yyy}">Purchase</a></div>`
+      edit_flag = `<div class="editbox"><a href="/buy/${zeroPad(xxx,3)}${zeroPad(yyy,3)}">Purchase</a></div>`
     }
 
     if (user && user.user_id === BYTE.owner_id) {
       var owner_flag = '(Owned)';
-      var edit_flag = `<div class="editbox"><a href="/edit/${xxx}${yyy}">Edit</a></div>`
+      var edit_flag = `<div class="editbox"><a href="/edit/${zeroPad(xxx,3)}${zeroPad(yyy,3)}">Edit</a></div>`
     }
     metadata = `<div class="extrusionbase"><b>Request: ${id} ${owner_flag}</b><span class="extrude">`
     metadata += `X: ${xxx} `
@@ -698,7 +782,7 @@ X.get('/view/:id', async (req, res) => {
 
     res_data += `${tools}` // view and translate toolkit
 
-    res_data += `${block_open}(MAPVIEW) NOT IMPLEMENTED${block_close}`
+    res_data += `${block_open}${map_system}${block_close}`
 
     res_data += `${block_open}<div style="font-size: 16px;">Description: <b>${BYTE.description}</b></div>${block_close}`
 
@@ -720,14 +804,14 @@ X.get('/view/:id', async (req, res) => {
 
     res_data += `<blockquote class="toast tooldrop dsp" id="ebox">`
     res_data += `<a>Level <level>${lvDisplay}</level> // <level>${user.level} (you)</level> ${levelPass}&#9679;</span></a><br>`
-    res_data += `<a>Silver ${BYTE.silver} // ${user.silver} (you) ${silverPass}&#9679;</span></a><br>`
-    res_data += `<a>Gold <gold>${BYTE.gold}</gold> // <gold>${user.gold} (you)</gold> ${goldPass}&#9679;</span></a>`
+    res_data += `<a>Gold <gold>${BYTE.gold}</gold> // <gold>${user.gold} (you)</gold> ${goldPass}&#9679;</span></a><br>`
+    res_data += `<a>Silver ${BYTE.silver} // ${user.silver} (you) ${silverPass}&#9679;</span></a>`
     res_data += `${edit_flag}`
     res_data += `${block_close}`
 
-    res_data += `${block_open}<div class="loginbox"><green><span title="Sovereignty">sov.: ${BYTE.updatedAt}</span></green>`
-    res_data += `<br><span title="Generated">gen.: ${BYTE.createdAt}</span>`
-    res_data += `<br><br><span title="Requested">req.: ${new Date()}</span>`
+    res_data += `${block_open}<div class="loginbox"><green><span title="Sovereignty Updated">sov.: ${BYTE.updatedAt}</span></green>`
+    res_data += `<br><span title="Node Generated">gen.: ${BYTE.createdAt}</span>`
+    res_data += `<br><br><span title="Requested"><gold>req.: ${new Date()}</gold></span>`
     res_data += `<br><span title="Uptime">upt.: ${StartDate}</span>`
 
     res_data += `</div>${block_close}`
@@ -792,7 +876,7 @@ X.get('/node_json/:id', async (req, res) => {
         raw: id,
         xxx: xxx,
         yyy: yyy,
-        address: `${xxx}${yyy}`,
+        address: `${zeroPad(xxx,3)}${zeroPad(yyy,3)}`,
         geo: {
           lat: `${realLat}.00`,
           lon: `${realLon}.00`,
