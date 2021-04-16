@@ -59,9 +59,9 @@ async function rMapNode(M,addr) {
 async function generateMapComponents(M,x,y) {
   // min/max
   var xmin = parseInt(x) - 5,
-    xmax = parseInt(x) + 5,
+    xmax = parseInt(x) + 4,
     ymin = parseInt(y) - 5,
-    ymax = parseInt(y) + 4;
+    ymax = parseInt(y) + 5;
   if (xmin < 0) xmin = 0;
   if (xmax >= 180) xmax = 179;
   if (ymin < 0) ymin = 0;
@@ -518,8 +518,8 @@ X.get('/user/:uid', async (req, res) => {
   var ownedSilverValue = 0, ownedGoldValue = 0;
 
   for (i = 0; i < Properties; i++) {
-    ownedSilverValue += parseInt(tagList[i].silver),
-    ownedGoldValue += parseInt(tagList[i].gold)
+    ownedSilverValue = parseInt(ownedSilverValue) + parseInt(tagList[i].silver),
+    ownedGoldValue = parseInt(ownedGoldValue) + parseInt(tagList[i].gold)
   }
 
   var PropertyDetail = '';
@@ -655,7 +655,7 @@ X.get('/view/:id', async (req, res) => {
 
     glyph = '&#9679;';
 
-    var map_system = '<table>';
+    var map_system = '<div class="dsp"><!--<div class="nav"><b>N-></b></div>--><table>';
 
     for (lon = maximus.ymax; lon >= maximus.ymin; lon--) {
       map_system += `<tr>`
@@ -670,13 +670,13 @@ X.get('/view/:id', async (req, res) => {
         if (NODE.owner_id == 0) nhead = '', ntail = '', NODE.owner_id = '(No Ownership)'
         if (user && NODE.owner_id == user.user_id) nhead = '<gold>', ntail = '</gold>'
         if (NODE.coordinate == `${zeroPad(xxx,3)}${zeroPad(yyy,3)}`) nhead = '<b>', ntail = "</b>"
-        map_system += `<td><a href="/view/${addr}"><span class="extrusionbase">${nhead}${glyph} ${addr}${ntail}`
+        map_system += `<td><a href="/view/${addr}"><span class="nodebase">${nhead}${glyph} ${addr}${ntail}`
         map_system += `<div class="nodeextrude">${NODE.coordinate}<br>${NODE.description}<br>${NODE.owner_id}</div></span></a></td>`
       }
       map_system += `</tr>`
     }
 
-    map_system += `</table>`
+    map_system += `</table></div>`
 
     // load node data
     BYTE = await readM(`${zeroPad(xxx,3)}${zeroPad(yyy,3)}`);

@@ -30,6 +30,12 @@ a:hover {
   z-index: 6;
 }
 
+.nav {
+  position: absolute;
+  right: -40px;
+  top: 100px;
+}
+
 .display-corner-right {
   position: absolute;
   top: 5px;
@@ -181,6 +187,11 @@ blockquote {
   border-bottom: 2px dotted white;
 }
 
+.nodebase {
+  position: relative;
+  display: inline-block;
+}
+
 .extrusionbase .extrude {
   visibility: hidden;
   width: 400px;
@@ -203,14 +214,14 @@ blockquote {
   opacity: 1;
 }
 
-.extrusionbase .nodeextrude {
+.nodebase .nodeextrude {
   visibility: hidden;
   background-color: #555;
   width: 200px;
   color: #fff;
   text-align: center;
   border-radius: 6px;
-  padding: 5px 0;
+  padding: 5px 5px;
   position: absolute;
   z-index: 6;
   top: 200%;
@@ -220,7 +231,7 @@ blockquote {
   transition: opacity 0.3s;
 }
 
-.extrusionbase:hover .nodeextrude {
+.nodebase:hover .nodeextrude {
   visibility: visible;
   opacity: 1;
 }
