@@ -657,9 +657,9 @@ X.get('/view/:id', async (req, res) => {
 
     var map_system = '<table>';
 
-    for (lon = maximus.ymax; lon > maximus.ymin; lon--) {
+    for (lon = maximus.ymax; lon >= maximus.ymin; lon--) {
       map_system += `<tr>`
-      for (lat = maximus.xmin; lat < maximus.xmax; lat++) {
+      for (lat = maximus.xmin; lat <= maximus.xmax; lat++) {
         var nhead = '', ntail = ''
         addr = `${zeroPad(lat,3)}${zeroPad(lon,3)}`
         NODE = await rMapNode(M,addr)
@@ -669,7 +669,7 @@ X.get('/view/:id', async (req, res) => {
         if (user && NODE.silver <= user.silver && NODE.gold <= user.gold) nhead = '<blue>', ntail = '</blue>'
         if (NODE.owner_id == 0) nhead = '', ntail = '', NODE.owner_id = '(No Ownership)'
         if (user && NODE.owner_id == user.user_id) nhead = '<gold>', ntail = '</gold>'
-        if (NODE.coordinate == `${xxx}${yyy}`) nhead = '<b>', ntail = "</b>"
+        if (NODE.coordinate == `${zeroPad(xxx,3)}${zeroPad(yyy,3)}`) nhead = '<b>', ntail = "</b>"
         map_system += `<td><a href="/view/${addr}"><span class="extrusionbase">${nhead}${glyph} ${addr}${ntail}`
         map_system += `<div class="nodeextrude">${NODE.coordinate}<br>${NODE.description}<br>${NODE.owner_id}</div></span></a></td>`
       }
