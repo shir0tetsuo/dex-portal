@@ -389,6 +389,61 @@ X.get('/auth', async (req, res) => {
   res.status(200).send(res_data)
 })
 
+X.post('/update', async (req, res) => {
+  if (!req.cookies.user_email || !req.cookies.hashed_pwd) return res.status(401).send({
+    error: "NOT LOGGED IN / ACCESS DENIED"
+  })
+  if (req.cookies.user_email && req.cookies.hashed_pwd) {
+    var user = await readPortalU(req.cookies.user_email);
+    if (user && req.cookies.hashed_pwd != user.portalhash) {
+      return res.status(406).send({
+        error: "ACCESS DENIED PORTAL HASH DOES NOT EQUAL COOKIE HASH",
+      })
+    }
+  }
+  Node = await readM(req.body.address)
+  if (!Node) return res.status(400).send({
+    error: "BAD METHOD"
+  })
+  if (user.user_id != Node.owner_id) return res.status(200).send({
+    response: "&nbsp;User doesn't have Ownership."
+  })
+
+  var node_cost_gold = Node.gold,
+  node_cost_silver = Node.silver,
+  ident_request = req.body.identity,
+  descr_request = req.body.desc,
+  gold_request = req.body.gold,
+  silver_request = req.body.silver;
+
+  // if the request length in the description exceeds maximum
+  if (descr_request.length > 33) return res.status(400).send({error: "Descr len > 33"})
+
+  // if the request leaves the node with less than 0
+  if (gold_request < 0 || silver_request < 0) return res.status(400).send({error: "Silver/Gold < 0"})
+
+  gold_after = Node.gold - gold_request;
+  silver_after = Node.silver - silver_request;
+
+  user_gold_after = user.gold + gold_after;
+  user_silver_after = user.silver + silver_after;
+
+  // if the request leaves the user with less than 0
+  if (user_gold_after < 0 || user_silver_after < 0) return res.status(400).send({error: "User funds < 0"})
+
+  if (descr_request == '(No Description)') descr_request = 0;
+
+  Users.update({ gold: user_gold_after, silver: user_silver_after },{ where: { portalemail: req.cookies.user_email }})
+  M.update({ gold: gold_request, silver: silver_request, identity: ident_request, description: descr_request },{ where: { coordinate: Node.coordinate }})
+
+  res.status(200).send({
+    response: "&nbsp;<b>Update Successful</b>",
+    reload: true,
+  })
+
+  console.log(chalk.greenBright('301 UPDATE SUCCESS',req.cookies.user_email))
+})
+
 X.post('/auth/authorize', async (req, res) => {
   var user_email = req.body.user_email;
   var user_password = req.body.password;
@@ -610,6 +665,62 @@ X.get('/ucp', async (req, res) => {
   } else {
     res.status(405).send('NOT LOGGED IN')
   }
+})
+
+
+X.get('/edit/:id', async (req, res) => {
+  if (!req.cookies.user_email || !req.cookies.hashed_pwd) return res.status(401).send({
+    error: "NOT LOGGED IN / ACCESS DENIED"
+  })
+  if (req.cookies.user_email && req.cookies.hashed_pwd) {
+    var user = await readPortalU(req.cookies.user_email);
+    if (user && req.cookies.hashed_pwd != user.portalhash) {
+      return res.status(406).send({
+        error: "ACCESS DENIED PORTAL HASH DOES NOT EQUAL COOKIE HASH",
+      })
+    }
+  }
+
+  if (!user) return res.status(406).send({
+    error: "ACCESS DENIED USER DOESN'T EXIST"
+  })
+  header = await readFile('./part/header.html')
+  pub_ver = await readFile('./part/pub_ver.html')
+  top_head = await readFile('./part/top_head.html')
+  editctrl = await readFile('./part/editctrl.html')
+  motd = await readFile('./part/motd.html')
+
+  const { id } = req.params;
+
+  const node = await rMapNode(M,id)
+
+  if (!node || !node.coordinate) return res.status(401).send({
+    error: "NODE DOESN'T EXIST IN DATABASE"
+  })
+
+  if (node.owner_id != user.user_id) return res.status(406).send({
+    error: "NODE OWNERSHIP != USER_ID"
+  })
+
+  res_data = ''; // header data
+  res_data += `${header}`
+
+  res_data += `<body onLoad="loadEditCtrl()">` // top left elements
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<span title="Information"><a href="/">DEX//</a></span><a href="/view/${id}">${id}</a> ${pub_ver}</div>`
+
+  res_data += `${top_head}` // logo
+  res_data += `edit`
+  res_data += `</div></div>`
+
+  res_data += `${editctrl}`
+
+  res_data += `${motd}`
+
+  console.log(chalk.blueBright('200 EDIT',id,req.cookies.user_email))
+
+  res.status(200).send(res_data)
+
 })
 
 // MOSTLY DONE

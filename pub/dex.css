@@ -30,6 +30,12 @@ a:hover {
   z-index: 6;
 }
 
+select {
+  min-width: 100px;
+  color: #d7d7d7;
+  background-color: #36393e;
+}
+
 .nav {
   position: absolute;
   right: -40px;

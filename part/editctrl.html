@@ -1,0 +1,65 @@
+<blockquote>
+  <!-- must connect to server, retrieve data from ID -->
+  <form>
+    <div class="dsp"><br>
+      <label for="identity">&nbsp;<div class="extrusionbase"><b>ID</b><span class="extrude">Sets the node's image/target.</span></div></label>
+      <select id="identity" name="identity" onchange="return pushValue('idbox', this)">
+        <option value="1" label="City">
+        <option value="2" label="Sparring Area (I)">
+        <option value="3" label="Sparring Area (II)">
+        <option value="4" label="Sparring Area (III)">
+        <option value="5" label="Sparring Area (IV)">
+        <option value="6" label="Defense Construct">
+        <option value="7" label="Weapon">
+        <option value="8" label="Nithya">
+        <option value="9" label="Dark Realm">
+        <option value="10" label="Ari's Realm">
+        <option value="11" label="Ari's Gate">
+        <option value="13" label="Other Gateway">
+        <option value="14" label="Light Realm">
+        <option value="15" label="Construct">
+        <option value="16" label="Unknown/Other">
+      </select>
+      <span id="idbox"></span>
+      <br><br>
+      <label for="descript">&nbsp;<div class="extrusionbase"><b>Description</b><span class="extrude">Maximum of 33 Characters in length.</span></div></label>
+      <br>&nbsp;<input type="text" id="descript" size="40" onkeyup="return limit(this, 33);">
+      <br><br><gold>&nbsp;<span id="userGold"></span> G</gold>, <span id="userSilver"></span> S <gold>Available</gold><br><br>
+      <label for="gold">&nbsp;<div class="extrusionbase"><gold>Cost Gold</gold><span class="extrude">Changing this value will deduct the appropriate funds from your account.</span></div></label>
+      <input type="number" id="gold" onchange="updateCost()" size="10"><br><br>
+      <label for="silver">&nbsp;<div class="extrusionbase">Cost Silver<span class="extrude">Changing this value will deduct the appropriate funds from your account.</span></div></label>
+      <input type="number" id="silver" onchange="updateCost()" size="10"><br>&nbsp;<span class="toast" id="server_error"><gold>&nbsp;Data loaded from Server.</gold></span>
+
+      <br><br>
+      <div class="display-corner-right">
+        <img id="display" src="https://shadowsword.tk/img/avaira/16_wormhole.gif">
+        <div class="top-gold"><span id="cost_gold"></span> <gold>G</gold></div>
+        <div class="top-silver"><span id="top-silv"></span> S</div>
+        <div id="submitbox">
+          &nbsp;<input type="button" id="submit" value="Update"><br><br>
+        </div>
+      </div>
+    </div>
+  </form>
+</blockquote>
+
+<script>
+  $(document).ready(function(){
+    var Data = {};
+    $("#submit").click(function(){
+      Data.id=$("#identity").val();
+      Data.desc=$("#descript").val();
+      Data.gold=$("#gold").val();
+      Data.silver=$("#silver").val();
+      Data.address=window.location.href.slice(-6);
+      $.post("/update",{identity: Data.id, desc: Data.desc, gold: Data.gold, silver: Data.silver, address: Data.address}, function(data){
+        if(data) {
+          setInnerHTML('server_error',data.response)
+          if (data.reload) {
+            setTimeout(function(){ location.replace(`/view/${Data.address}`); }, 3000);  
+          }
+          }
+      });
+    });
+  });
+</script>
