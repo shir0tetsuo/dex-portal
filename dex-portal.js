@@ -389,6 +389,45 @@ X.get('/auth', async (req, res) => {
   res.status(200).send(res_data)
 })
 
+X.get('/buy/:id', async (req, res) => {
+  if (!req.cookies.user_email || !req.cookies.hashed_pwd) return res.status(401).send({
+    error: "NOT LOGGED IN / ACCESS DENIED"
+  })
+  if (req.cookies.user_email && req.cookies.hashed_pwd) {
+    var user = await readPortalU(req.cookies.user_email);
+    if (user && req.cookies.hashed_pwd != user.portalhash) {
+      return res.status(406).send({
+        error: "ACCESS DENIED PORTAL HASH DOES NOT EQUAL COOKIE HASH",
+      })
+    }
+  }
+  const { id } = req.params;
+  Node = await readM(id)
+  if (!Node) return res.status(400).send({
+    error: "BAD METHOD"
+  })
+
+  if (user.silver < Node.silver || user.gold < Node.gold) return res.status(400).send({
+    error: "USER NOT ENOUGH FUNDS"
+  })
+
+  if (Node.owner_id != 0) var owner_user = await readU(Node.owner_id);
+  if (!owner_user) owner_user = {}, owner_user.level = 0;
+  if (owner_user.level > user.level) return res.status(400).send({
+    error: "NODE OWNER LEVEL > USER LEVEL"
+  })
+
+  user_gold = user.gold - Node.gold;
+  user_silver = user.silver - Node.silver;
+  user_mrecord = user.mrecord + 1;
+
+  Users.update({ gold: user_gold, silver: user_silver, mrecord: user_mrecord },{ where:{ user_id: user.user_id }})
+
+  M.update({ owner_id: user.user_id },{where: { coordinate: Node.coordinate }})
+  redirect = await readFile('./part/301.html')
+  res.status(200).send(redirect)
+})
+
 X.post('/update', async (req, res) => {
   if (!req.cookies.user_email || !req.cookies.hashed_pwd) return res.status(401).send({
     error: "NOT LOGGED IN / ACCESS DENIED"
@@ -422,10 +461,10 @@ X.post('/update', async (req, res) => {
   // if the request leaves the node with less than 0
   if (gold_request < 0 || silver_request < 0) return res.status(400).send({error: "Silver/Gold < 0"})
 
-  gold_after = Node.gold - gold_request;
+  var gold_after = Node.gold - gold_request,
   silver_after = Node.silver - silver_request;
 
-  user_gold_after = user.gold + gold_after;
+  var user_gold_after = user.gold + gold_after,
   user_silver_after = user.silver + silver_after;
 
   // if the request leaves the user with less than 0
