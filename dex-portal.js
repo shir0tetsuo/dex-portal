@@ -389,6 +389,79 @@ X.get('/auth', async (req, res) => {
   res.status(200).send(res_data)
 })
 
+X.get('/leaders', async (req, res) => {
+  header = await readFile('./part/header.html')
+  pub_ver = await readFile('./part/pub_ver.html')
+  top_head = await readFile('./part/top_head.html')
+  motd = await readFile('./part/motd.html')
+
+  res_data = ''; // header data
+  res_data += `${header}`
+
+  res_data += `<body>` // top left elements
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<span title="Information"><a href="/">DEX//</a></span>Leaderboard ${pub_ver}</div>`
+
+  const list_maxgold = await Users.findAll({
+    order: [
+      ['gold','DESC']
+    ]
+  })
+  const list_maxsilver = await Users.findAll({
+    order: [
+      ['silver','DESC']
+    ]
+  })
+  const list_maxlevel = await Users.findAll({
+    order: [
+      ['level','DESC']
+    ]
+  })
+  const list_maxmrecord = await Users.findAll({
+    order: [
+      ['mrecord','DESC']
+    ]
+  })
+  const list_maxmwealthgold = await M.findAll({
+    order: [
+      ['gold','DESC']
+    ]
+  })
+  const list_maxmwealthsilver = await M.findAll({
+    order: [
+      ['silver','DESC']
+    ]
+  })
+
+  var maxgold = '', maxsilver = '', maxlevel = '', maxmrecord = '', maxmwealthgold = '', maxmwealthsilver = ''
+
+  for (i = 0; i < 12; i++) {
+    maxgold += `<a href="/user/${list_maxgold[i].user_id}">${list_maxgold[i].user_id}</a> <gold>${list_maxgold[i].gold} G</gold><br>`
+    maxsilver += `<a href="/user/${list_maxsilver[i].user_id}">${list_maxsilver[i].user_id}</a> ${list_maxsilver[i].silver} S<br>`
+    maxlevel += `<a href="/user/${list_maxlevel[i].user_id}">${list_maxlevel[i].user_id}</a> <level>${list_maxlevel[i].level} Lv</level><br>`
+    maxmrecord += `<a href="/user/${list_maxmrecord[i].user_id}">${list_maxmrecord[i].user_id}</a> <level>${list_maxmrecord[i].mrecord} EXP</level><br>`
+    maxmwealthgold += `<a href="/view/${list_maxmwealthgold[i].coordinate}">${list_maxmwealthgold[i].coordinate}</a> <gold>${list_maxmwealthgold[i].gold} G</gold><br>`
+    maxmwealthsilver += `<a href="/view/${list_maxmwealthsilver[i].coordinate}">${list_maxmwealthsilver[i].coordinate}</a> ${list_maxmwealthsilver[i].silver} S<br>`
+  }
+
+
+  res_data += `${top_head}` // logo
+  res_data += `ldrs`
+  res_data += `</div></div>`
+  res_data += `${block_open}<div class="userPropertyBox">${maxgold}top_gold</div>${block_close}`
+  res_data += `${block_open}<div class="userPropertyBox">${maxsilver}top_silver</div>${block_close}`
+  res_data += `${block_open}<div class="userPropertyBox">${maxlevel}top_level</div>${block_close}`
+  res_data += `${block_open}<div class="userPropertyBox">${maxmrecord}top_exp</div>${block_close}`
+  res_data += `${block_open}<div class="userPropertyBox">${maxmwealthsilver}most_valuable_silver_nodes</div>${block_close}`
+  res_data += `${block_open}<div class="userPropertyBox">${maxmwealthgold}most_valuable_gold_nodes</div>${block_close}`
+
+  //res_data += ``
+  res_data += `${motd}`
+
+
+  res.status(200).send(res_data)
+})
+
 X.get('/buy/:id', async (req, res) => {
   if (!req.cookies.user_email || !req.cookies.hashed_pwd) return res.status(401).send({
     error: "NOT LOGGED IN / ACCESS DENIED"
@@ -425,6 +498,7 @@ X.get('/buy/:id', async (req, res) => {
 
   M.update({ owner_id: user.user_id },{where: { coordinate: Node.coordinate }})
   redirect = await readFile('./part/301.html')
+  console.log('301 PURCHASE',req.cookies.user_email)
   res.status(200).send(redirect)
 })
 
@@ -580,6 +654,7 @@ X.get('/user/:uid', async (req, res) => {
   header = await readFile('./part/header.html')
   pub_ver = await readFile('./part/pub_ver.html')
   top_head = await readFile('./part/top_head.html')
+  motd = await readFile('./part/motd.html')
 
   errorReturn = `${header}${errorfile}`
 
@@ -630,12 +705,14 @@ X.get('/user/:uid', async (req, res) => {
   }
 
   res_data += `${block_open}<div class="loginbox">`
-  res_data += `<b>${uid}</b>${legacy} // <level>Level ${user.level}</level> / <level>${user.mrecord} EXP</level> // <gold>${ownedGoldValue} G</gold>, ${ownedSilverValue} S <gold>in ${Properties} Nodes</gold>`
+  res_data += `<b>${uid}</b>${legacy} // <level>Level ${user.level}</level> / <level>${user.mrecord} EXP</level> // <gold>${ownedGoldValue} G</gold>, ${ownedSilverValue} S <gold>in ${Properties} Nodes</gold> // <a href="/leaders">Leaderboard</a>`
   res_data += `</div>${block_close}`
 
   res_data += `${block_open}<div class="userPropertyBox">`
   res_data += `${PropertyDetail}`
   res_data += `</div>${block_close}`
+
+  res_data += `${motd}`
 
   console.log(chalk.blueBright('200 user',uid,req.cookies.user_email))
   res.status(200).send(res_data)
