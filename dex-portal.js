@@ -59,9 +59,9 @@ async function rMapNode(M,addr) {
 async function generateMapComponents(M,x,y) {
   // min/max
   var xmin = parseInt(x) - 5,
-    xmax = parseInt(x) + 4,
+    xmax = parseInt(x) + 5,
     ymin = parseInt(y) - 5,
-    ymax = parseInt(y) + 5;
+    ymax = parseInt(y) + 4;
   if (xmin < 0) xmin = 0;
   if (xmax >= 180) xmax = 179;
   if (ymin < 0) ymin = 0;
