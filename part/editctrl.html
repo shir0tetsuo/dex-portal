@@ -18,7 +18,12 @@
         <option value="13" label="Other Gateway">
         <option value="14" label="Light Realm">
         <option value="15" label="Construct">
-        <option value="16" label="Unknown/Other">
+        <option value="16" label="Unknown/Other (I)">
+        <option value="19" label="Unknown/Other (II)">
+        <option value="17" label="Star (I)">
+        <option value="18" label="Star (II)">
+        <option value="21" label="Star (III)">
+        <option value="20" label="Void">
       </select>
       <span id="idbox"></span>
       <br><br>
@@ -56,7 +61,7 @@
         if(data) {
           setInnerHTML('server_error',data.response)
           if (data.reload) {
-            setTimeout(function(){ location.replace(`/view/${Data.address}`); }, 3000);  
+            setTimeout(function(){ location.replace(`/view/${Data.address}`); }, 3000);
           }
           }
       });

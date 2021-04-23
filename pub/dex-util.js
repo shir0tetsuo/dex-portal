@@ -21,7 +21,8 @@ function forceLower(strInput) {
 
 ident_img_array = [
   '1_city','2_nIV','3_spar','4_spar','5_spar','6_defconstruct',
-  '7_railgun','8_nithya','9_dark','10_arirealm','11_arigate','12_NULL','13_astragate','14_lightgate','15_construct','16_wormhole'
+  '7_railgun','8_nithya','9_dark','10_arirealm','11_arigate','12_NULL','13_astragate','14_lightgate','15_construct','16_wormhole',
+  '17_star','18_star','19_other','20_void','21_star'
 ]
 
 function pushValue(id, origin) {

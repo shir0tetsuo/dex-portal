@@ -884,21 +884,35 @@ X.get('/view/:id', async (req, res) => {
 
     var map_system = '<div class="dsp"><!--<div class="nav"><b>N-></b></div>--><table>';
 
-    for (lon = maximus.ymax; lon >= maximus.ymin; lon--) {
+    for (lon = maximus.ymin; lon <= maximus.ymax; lon++) {
       map_system += `<tr>`
       for (lat = maximus.xmin; lat <= maximus.xmax; lat++) {
         var nhead = '', ntail = ''
         addr = `${zeroPad(lat,3)}${zeroPad(lon,3)}`
         NODE = await rMapNode(M,addr)
         if (!NODE) NODE = await mdummy();
-        if (NODE.owner_id != 0) nhead = '<level>', ntail = '</level>'
+
         if (NODE.description == 0) NODE.description = '(No Description)'
+
+        // if node ownership belongs to someone else
+        if (NODE.owner_id != 0 && NODE.owner_id != undefined) nhead = '<red>', ntail = '</red>'
+
+        // if user can fund node purchase
         if (user && NODE.silver <= user.silver && NODE.gold <= user.gold) nhead = '<blue>', ntail = '</blue>'
+
+        // if node has no ownership
         if (NODE.owner_id == 0) nhead = '', ntail = '', NODE.owner_id = '(No Ownership)'
+
+        // if user has node ownership
         if (user && NODE.owner_id == user.user_id) nhead = '<gold>', ntail = '</gold>'
+
+        //if (user && NODE.owner_id != user.user_id && NODE.owner_id != 0 && NODE.owner_id != undefined && NODE.silver)
+
+        // current node highlight
         if (NODE.coordinate == `${zeroPad(xxx,3)}${zeroPad(yyy,3)}`) nhead = '<b>', ntail = "</b>"
+
         map_system += `<td><a href="/view/${addr}"><span class="nodebase">${nhead}${glyph} ${addr}${ntail}`
-        map_system += `<div class="nodeextrude">${NODE.coordinate}<br>${NODE.description}<br>${NODE.owner_id}</div></span></a></td>`
+        map_system += `<div class="nodeextrude">${NODE.coordinate}(${NODE.identity})<br>${NODE.description}<br>${NODE.owner_id}</div></span></a></td>`
       }
       map_system += `</tr>`
     }
@@ -921,7 +935,8 @@ X.get('/view/:id', async (req, res) => {
 
     ident_img_array = [
       '1_city','2_nIV','3_spar','4_spar','5_spar','6_defconstruct',
-      '7_railgun','8_nithya','9_dark','10_arirealm','11_arigate','12_NULL','13_astragate','14_lightgate','15_construct','16_wormhole'
+      '7_railgun','8_nithya','9_dark','10_arirealm','11_arigate','12_NULL','13_astragate','14_lightgate','15_construct','16_wormhole',
+      '17_star','18_star','19_other','20_void','21_star'
     ]
 
     if (!BYTE.identity) {
@@ -965,7 +980,7 @@ X.get('/view/:id', async (req, res) => {
     if (!USER) USER = {}, USER.level = 0;
 
     if (user && user.user_id != BYTE.owner_id && user.silver >= BYTE.silver && user.gold >= BYTE.gold && user.level >= USER.level) {
-      edit_flag = `<div class="editbox"><a href="/buy/${zeroPad(xxx,3)}${zeroPad(yyy,3)}">Purchase</a></div>`
+      edit_flag = `<div class="editbox"><a href="/buy/${zeroPad(xxx,3)}${zeroPad(yyy,3)}">Capture</a></div>`
     }
 
     if (user && user.user_id === BYTE.owner_id) {
