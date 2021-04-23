@@ -166,6 +166,8 @@ function setValue(id,val) {
 
 async function loadEditCtrl() {
   await syncNodeJSON()
+  let addressIdent = window.location.href.slice(-6)
+  document.getElementById('truedelete').href = `../delete/${addressIdent}`
   toast('server_error')
   //pushValue('idbox',document.getElementById('identity'))
 }

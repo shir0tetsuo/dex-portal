@@ -855,6 +855,40 @@ X.get('/edit/:id', async (req, res) => {
 
 // MOSTLY DONE
 
+X.get('/delete/:id', async (req, res) => {
+
+  redirect = await readFile('./part/301.html')
+
+  const { id } = req.params;
+
+  if (!req.cookies.user_email || !req.cookies.hashed_pwd) return res.status(401).send({
+    error: "NOT LOGGED IN / ACCESS DENIED"
+  })
+  if (req.cookies.user_email && req.cookies.hashed_pwd) {
+    var user = await readPortalU(req.cookies.user_email);
+    if (user && req.cookies.hashed_pwd != user.portalhash) {
+      return res.status(406).send({
+        error: "ACCESS DENIED PORTAL HASH DOES NOT EQUAL COOKIE HASH",
+      })
+    }
+  }
+  Node = await readM(id)
+  if (!Node) return res.status(400).send({
+    error: "BAD METHOD"
+  })
+  if (user.user_id != Node.owner_id) return res.status(200).send({
+    response: "&nbsp;User doesn't have Ownership."
+  })
+
+  newSilver = user.silver + Node.silver;
+  newGold = user.gold + Node.gold;
+
+  M.update({owner_id: 0, silver: 2, gold: 0, identity: 0, description: 0},{where:{ coordinate: Node.coordinate }})
+  Users.update({silver: newSilver, gold: newGold},{where: { user_id: user.user_id }})
+
+  res.status(200).send(redirect)
+})
+
 X.get('/view/:id', async (req, res) => {
   let ReqDate = new Date();
   if (req.cookies.user_email && req.cookies.hashed_pwd) {
@@ -894,7 +928,7 @@ X.get('/view/:id', async (req, res) => {
 
     maximus = await generateMapComponents(M,zeroPad(xxx,3),zeroPad(yyy,3))
 
-    glyph = '&#9679;';
+    glyph = '&#x25C9;';
 
     var map_system = '<div class="dsp"><!--<div class="nav"><b>N-></b></div>--><table>';
 
@@ -913,6 +947,9 @@ X.get('/view/:id', async (req, res) => {
 
         // if user can fund node purchase
         if (user && NODE.silver <= user.silver && NODE.gold <= user.gold) nhead = '<blue>', ntail = '</blue>'
+
+        // if user doesn't have enough gold
+        if (user && NODE.gold > user.gold) nhead = '<level>', ntail = '</level>'
 
         // if node has no ownership
         if (NODE.owner_id == 0) nhead = '', ntail = '', NODE.owner_id = '(No Ownership)'
