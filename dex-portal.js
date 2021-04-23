@@ -68,6 +68,7 @@ async function generateMapComponents(M,x,y) {
   if (ymax >= 360) ymax = 359;
   var workload = [];
   // loop through generation
+
   await (async function loop() {
     for (lat = xmin; lat < xmax; lat++) {
       for (lon = ymin; lon < ymax; lon++) {
@@ -80,6 +81,19 @@ async function generateMapComponents(M,x,y) {
   })().then(r => {
     console.log(chalk.greenBright('201 generateMapComponents X',xmin,xmax,'Y',ymin,ymax))
   })
+
+  /*await (async function loop() {
+    for (lat = xmin; lat < xmax; lat++) {
+      for (lon = ymin; lon < ymax; lon++) {
+        var xx = zeroPad(lat,3)
+        var yy = zeroPad(lon,3)
+        var address = `${xx}${yy}`
+        await generateNode(M,address);
+      }
+    }
+  })().then(r => {
+    console.log(chalk.greenBright('201 generateMapComponents X',xmin,xmax,'Y',ymin,ymax))
+  })*/
 
   data = {};
   data.xmin = xmin;
@@ -884,9 +898,9 @@ X.get('/view/:id', async (req, res) => {
 
     var map_system = '<div class="dsp"><!--<div class="nav"><b>N-></b></div>--><table>';
 
-    for (lon = maximus.ymin; lon <= maximus.ymax; lon++) {
+    for (lat = maximus.xmax; lat >= maximus.xmin; lat--) {
       map_system += `<tr>`
-      for (lat = maximus.xmin; lat <= maximus.xmax; lat++) {
+      for (lon = maximus.ymin; lon <= maximus.ymax; lon++) {
         var nhead = '', ntail = ''
         addr = `${zeroPad(lat,3)}${zeroPad(lon,3)}`
         NODE = await rMapNode(M,addr)
