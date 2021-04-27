@@ -56,6 +56,23 @@ async function rMapNode(M,addr) {
   return node = await M.findOne({ where: { coordinate: addr }})
 }
 
+async function umr(Users,user_email) {
+  user = await readPortalU(user_email)
+  if (!user) return;
+  const levelCalculated = Math.floor(0.4 * Math.sqrt(user.mrecord));
+  const levelRewardGold = Math.floor(user.mrecord / 12);
+  const levelRewardSilver = 10 + Math.floor(user.mrecord / 10) + levelCalculated;
+  var newmrecord = user.mrecord + 1,
+  newsilver = user.silver + levelRewardSilver,
+  newgold = user.gold + levelRewardGold;
+  if (levelCalculated > user.level) {
+    console.log('200 UPDATED USER LEVEL',user_email,levelCalculated)
+    Users.update({level: levelCalculated, gold: newgold, silver: newsilver, mrecord: newmrecord},{where: { user_id: user.user_id }})
+  } else {
+    Users.update({mrecord: newmrecord},{where: { user_id: user.user_id }})
+  }
+}
+
 async function generateMapComponents(M,x,y) {
   // min/max
   var xmin = parseInt(x) - 5,
@@ -906,6 +923,7 @@ X.get('/view/:id', async (req, res) => {
   motd = await readFile('./part/motd.html')
 
   const { id } = req.params;
+  umr(Users,req.cookies.user_email)
 
   if (id.length != 6 || isNaN(id)) {
     res.status(406).send({
