@@ -1,9 +1,14 @@
 <!-- TOOLKIT -->
 <blockquote class="toolkit">
-  <input id="abar" value="0" style="width: 54px;" /> <a id="abargo" onclick="gotoBar()" href="#"><b>GO</b></a>
-  <a href="#" onclick="getRandLoc()"><randbutton>Random</randbutton></a>
+  <input id="abar" value="0" style="width: 54px;" /> <a id="abargo" onclick="gotoBar()" href="#"><b><u>GO</u></b></a>
+  <a href="#" onclick="getRandLoc()"><randbutton><u>Random</u></randbutton></a>
   <!--[conversion]-->
+  <a onclick="poptoast('convertbox')"><blue><u>lat,lon</u></blue></a>
   <a href="/auth" id="login-ctrl"></a>
-  <a href="#" id="json-export"><jsonbutton>.json</jsonbutton></a>
+  <a href="#" id="json-export"><jsonbutton><u>.json</u></jsonbutton></a>
+</blockquote>
+
+<blockquote class="toast" id="convertbox">
+  lat <input type="number" size="10" id="cvlat" /> lon <input type="number" size="10" id="cvlon" /> <a onclick="gotoLong()"><b>GO</b></a>
 </blockquote>
 <!-- TOOLKIT END -->

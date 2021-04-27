@@ -63,6 +63,10 @@ function loadAddressBar() {
   let addressIdent = window.location.href.slice(-6)
   document.getElementById("abar").value = `${addressIdent}`;
   bar = document.getElementById("abar");
+  realLat = parseInt(addressIdent.substring(0,3)) - 90
+  realLon = parseInt(addressIdent.substring(3,6)) - 180
+  setValue('cvlat',realLat)
+  setValue('cvlon',realLon)
   bar.addEventListener("keyup", function(event) {
     if (event.keyCode === 13) {
       gotoBar()
@@ -92,6 +96,14 @@ function loadPassBar() {
 function gotoBar() {
   ref = document.getElementById("abar").value;
   window.location.replace(`https://realmdex.shadowsword.tk/view/${ref}`)
+}
+
+function gotoLong() {
+  lat = Math.round(document.getElementById("cvlat").value);
+  lon = Math.round(document.getElementById("cvlon").value);
+  digiLat = zeroPad(parseInt(lat) + 90,3)
+  digiLon = zeroPad(parseInt(lon) + 180,3)
+  window.location.replace(`https://realmdex.shadowsword.tk/view/${digiLat}${digiLon}`)
 }
 
 function gotoSubmit() {
