@@ -342,7 +342,7 @@ X.get('/', async (req, res) => {
   logos = await readFile('./part/index2_logos.html')
   motd = await readFile('./part/motd.html')
 
-  if (req.cookies.user_email) req.cookies.user_email = `<a href="/ucp"><blue>${req.cookies.user_email}</blue></a>`
+  if (req.cookies.user_email) req.cookies.user_email = `<a href="/ucp"><blue><u>${req.cookies.user_email}</u></blue></a>`
   if (!req.cookies.user_email) req.cookies.user_email = "Not Logged In"
 
   var res_data = '';
@@ -350,11 +350,13 @@ X.get('/', async (req, res) => {
   res_data += `<body>` // top left elements
   res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
   res_data += `<span title="Jump To Random Location"><a href="#" onclick="getRandLoc()">DEX//</a></span>Information ${pub_ver}</div>`
-  res_data += `${top_head}information</div></div>${index}`
-  res_data += `${block_open}<div class="loginbox"><a href="/auth">Login/Logout</a> &nbsp;<span title="Jump To Random Location"><a href="#" onclick="getRandLoc()">Enter</a></span><br><br>(${req.cookies.user_email})</div>${block_close}`
+  res_data += `${top_head}information</div></div>`
+  res_data += `${block_open}<div class="loginbox"><a href="/auth">Login/Logout</a> &nbsp;&nbsp;<span title="Jump To Random Location"><a href="#" onclick="getRandLoc()"><level><u>Enter</u></level></a></span><br><br>(${req.cookies.user_email})</div>${block_close}`
   res_data += `${block_open}<br>`
   res_data += `System up since ${StartDate}<br><br>`
   res_data += `${block_close}`
+  if (req.cookies.user_email == "Not Logged In") res_data += `${index}`
+  //res_data += `${index}`
 
   res_data += `${motd}`
 
