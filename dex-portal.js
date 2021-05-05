@@ -73,6 +73,20 @@ async function umr(Users,user_email) {
   }
 }
 
+async function checkAuthorization(user_email, hashed_pwd) {
+  var flag = false;
+  if (!user_email || !hashed_pwd) return flag;
+  if (user_email == undefined || parseInt(user_email) == 0 || user_email.length < 3) return flag;
+  if (user_email && hashed_pwd) {
+    var user = await readPortalU(user_email);
+    if (user && hashed_pwd == user.portalhash) {
+      flag = true;
+      console.log(202,user_email)
+    }
+  }
+  return flag;
+}
+
 async function generateMapComponents(M,x,y) {
   // min/max
   var xmin = parseInt(x) - 5,
@@ -148,6 +162,10 @@ function mdummy() {
   //data.mrecord = 0;
   return data
 }
+function bdummy() {
+  data = {};
+  return data
+}
 async function readFile(filePath) {
   try {
     const data = await fs.readFile(filePath);
@@ -210,6 +228,7 @@ async function readU(uid) {
 }
 async function readPortalU(email) {
   //console.log(email)
+  if (!email) return udummy()
   user = await Users.findOne({
     where: {
       portalemail: email
@@ -256,6 +275,59 @@ const M = sequelize.define('mapdata', {
     allowNull: false,
   },
 });
+// make a list from a user's zones to tether this to
+const Mission = sequelize.define('mission', {
+  owner_id: {
+    type: Sequelize.STRING,
+    defaultValue: '0',
+    allowNull: false
+  },
+  m_name: {
+    type: Sequelize.STRING,
+    defaultValue: '0',
+    allowNull: false
+  },
+  m_type: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false
+  },
+  m_area: {
+    type: Sequelize.STRING,
+    defaultValue: '0',
+    allowNull: false
+  },
+  m_area_securityrating: {
+    type: Sequelize.STRING,
+    defaultValue: '0',
+    allowNull: false
+  },
+  m_description: {
+    type: Sequelize.STRING,
+    defaultValue: '0',
+    allowNull: false
+  },
+  m_difficulty: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false
+  },
+  m_corruption: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false
+  },
+  m_complete: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false
+  },
+  m_date:{
+    type: Sequelize.STRING,
+    defaultValue: 'May 1, 2021 12:00:00',
+    allowNull: false
+  }
+})
 const Users = sequelize.define('users', {
   user_id: {
     type: Sequelize.STRING,
@@ -305,6 +377,7 @@ const Users = sequelize.define('users', {
   }
 });
 M.sync();
+Mission.sync();
 Users.sync();
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -495,18 +568,68 @@ X.get('/leaders', async (req, res) => {
   res.status(200).send(res_data)
 })
 
-X.get('/buy/:id', async (req, res) => {
-  if (!req.cookies.user_email || !req.cookies.hashed_pwd) return res.status(401).send({
-    error: "NOT LOGGED IN / ACCESS DENIED"
+X.get('/mission/:page', async (req, res) => {
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
+
+  const { page } = req.params;
+
+  header = await readFile('./part/header.html')
+  pub_ver = await readFile('./part/pub_ver.html')
+  top_head = await readFile('./part/top_head.html')
+  motd = await readFile('./part/motd.html')
+
+  res_data = ''; // header
+  res_data += `${header}`
+
+  res_data += `<body>` // top left elements
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<span title="Information"><a href="/">MISSION//</a></span><red>PAGE ${page}</red> ${pub_ver}</div>`
+
+  res_data += `${top_head}bounty</div></div>`
+
+  res_data += `${block_open}`
+
+  MiData = await Mission.findAll({
+    order: [
+      ['id','DESC']
+    ]
   })
-  if (req.cookies.user_email && req.cookies.hashed_pwd) {
-    var user = await readPortalU(req.cookies.user_email);
-    if (user && req.cookies.hashed_pwd != user.portalhash) {
-      return res.status(406).send({
-        error: "ACCESS DENIED PORTAL HASH DOES NOT EQUAL COOKIE HASH",
-      })
+
+  pStart = Math.floor(page*10)-10;
+  pEnd = Math.floor(page*10);
+
+  d_status = ['<b>ACTIVE</b>','<red>INACTIVE</red>'];
+  d_difficulty = ['Neophyte','Intermediate','Advanced','Angelic','Celestial','Suicide']
+  d_type = ['ENEMY','ENEMY AREA']
+  d_corruption = ['Shattered','Voidal','Malignant','Corrupt','Diseased','Ailed','Quiet','Healthy','Evolving','Ascended']
+
+  for (i = pStart; i < pEnd; i++) {
+    if (MiData[i] != undefined) {
+      var D = MiData[i]
+      var cdDate = new Date(D.m_date).getTime(),
+      cdNow = new Date().getTime();
+      var distance = cdNow - cdDate;
+      var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      D.m_left = days + "d " + hours + "h " + minutes + "m " + seconds + "s"
+      res_data += `ID ${i} ${d_status[D.m_complete]}<br>(${D.owner_id}) `
+      res_data += `<red>Difficulty: ${d_difficulty[D.m_difficulty]} (${d_corruption[D.m_corruption]})</red> "${D.m_name}" <br>${d_type[D.m_type]} @<a href="/view/${D.m_area}">${D.m_area}</a> <level>SEC[${D.m_area_securityrating}]</level> <br><gold>${D.m_description}</gold> <br><b><red>Action in ${D.m_left} (${D.m_date})</red></b><br><br>`
+    } else {
+      res_data += `ID ${i} (BLANK)<br>`
     }
   }
+
+  res_data += `${block_close}`
+
+  res.status(200).send(res_data)
+})
+
+X.get('/buy/:id', async (req, res) => {
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
   const { id } = req.params;
   Node = await readM(id)
   if (!Node) return res.status(400).send({
