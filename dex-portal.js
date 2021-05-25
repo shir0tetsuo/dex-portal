@@ -424,7 +424,7 @@ X.get('/', async (req, res) => {
   res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
   res_data += `<span title="Jump To Random Location"><a href="#" onclick="getRandLoc()">DEX//</a></span>Information ${pub_ver}</div>`
   res_data += `${top_head}information</div></div>`
-  res_data += `${block_open}<div class="loginbox"><a href="/auth">Login/Logout</a> &nbsp;&nbsp;<span title="Jump To Random Location"><a href="#" onclick="getRandLoc()"><level><u>Enter</u></level></a></span><br><br>(${req.cookies.user_email})</div>${block_close}`
+  res_data += `${block_open}<div class="loginbox"><a class="phased" href="/auth">Login/Logout</a> &nbsp;&nbsp;<span title="Jump To Random Location"><a href="#" onclick="getRandLoc()"><level><u>Enter</u></level></a></span><br><br>(${req.cookies.user_email})</div>${block_close}`
   res_data += `${block_open}<br>`
   res_data += `System up since ${StartDate}<br><br>`
   res_data += `${block_close}`
@@ -599,9 +599,9 @@ X.get('/mission/:page', async (req, res) => {
   pStart = Math.floor(page*10)-10;
   pEnd = Math.floor(page*10);
 
-  d_status = ['<b>ACTIVE</b>','<red>INACTIVE</red>'];
+  d_status = ['<b>ACTIVE</b>','<red>INACTIVE</red>','<jsonbutton>NON-PRIORITY</jsonbutton>'];
   d_difficulty = ['Neophyte','Intermediate','Advanced','Angelic','Celestial','Suicide']
-  d_type = ['ENEMY','ENEMY AREA']
+  d_type = ['ENEMY','ENEMY AREA','MISSION']
   d_corruption = ['Shattered','Voidal','Malignant','Corrupt','Diseased','Ailed','Quiet','Healthy','Evolving','Ascended']
 
   for (i = pStart; i < pEnd; i++) {
@@ -610,13 +610,13 @@ X.get('/mission/:page', async (req, res) => {
       var cdDate = new Date(D.m_date).getTime(),
       cdNow = new Date().getTime();
       var distance = cdNow - cdDate;
-      var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-      D.m_left = days + "d " + hours + "h " + minutes + "m " + seconds + "s"
-      res_data += `ID ${i} ${d_status[D.m_complete]}<br>(${D.owner_id}) `
-      res_data += `<red>Difficulty: ${d_difficulty[D.m_difficulty]} (${d_corruption[D.m_corruption]})</red> "${D.m_name}" <br>${d_type[D.m_type]} @<a href="/view/${D.m_area}">${D.m_area}</a> <level>SEC[${D.m_area_securityrating}]</level> <br><gold>${D.m_description}</gold> <br><b><red>Action in ${D.m_left} (${D.m_date})</red></b><br><br>`
+      //var days = Math.floor(distance / (1000 * 60 * 60 * 24))+1;
+      //var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      //var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      //var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      //D.m_left = days + "d " + hours + "h " + minutes + "m " + seconds + "s"
+      res_data += `ID ${D.id} ${d_status[D.m_complete]}<br>(${D.owner_id}) `
+      res_data += `<red>Difficulty: ${d_difficulty[D.m_difficulty]} (${d_corruption[D.m_corruption]})</red> "${D.m_name}" <br>${d_type[D.m_type]} @<a href="/view/${D.m_area}">${D.m_area}</a> <level>SEC[${D.m_area_securityrating}]</level> <br><gold>${D.m_description}</gold> <br><b><red>( @ ${D.m_date} )</red></b><br><br>`
     } else {
       res_data += `ID ${i} (BLANK)<br>`
     }
@@ -1174,12 +1174,12 @@ X.get('/view/:id', async (req, res) => {
     if (!USER) USER = {}, USER.level = 0;
 
     if (user && user.user_id != BYTE.owner_id && user.silver >= BYTE.silver && user.gold >= BYTE.gold && user.level >= USER.level) {
-      edit_flag = `<div class="editbox"><a href="/buy/${zeroPad(xxx,3)}${zeroPad(yyy,3)}">Capture</a></div>`
+      edit_flag = `<div class="editbox"><a class="phased" href="/buy/${zeroPad(xxx,3)}${zeroPad(yyy,3)}">Capture</a></div>`
     }
 
     if (user && user.user_id === BYTE.owner_id) {
       var owner_flag = '(Owned)';
-      var edit_flag = `<div class="editbox"><a href="/edit/${zeroPad(xxx,3)}${zeroPad(yyy,3)}">Edit</a></div>`
+      var edit_flag = `<div class="editbox"><a class="phasedYel" href="/edit/${zeroPad(xxx,3)}${zeroPad(yyy,3)}">Edit</a></div>`
     }
     metadata = `<div class="extrusionbase"><b>Request: ${id} ${owner_flag}</b><span class="extrude">`
     metadata += `X: ${xxx} `
