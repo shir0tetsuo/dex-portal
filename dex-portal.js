@@ -399,6 +399,7 @@ X.use(cookies())
 // load /img/ media from folder 'img'
 X.use('/pub', express.static('pub'));
 X.use('/favicon.ico', express.static('favicon.ico'));
+X.use('/robots.txt', express.static('robots.txt'));
 
 X.use(function(err, req, res, next) {
   console.error(err.stack);
