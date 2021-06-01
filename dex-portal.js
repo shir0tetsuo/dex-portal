@@ -601,7 +601,7 @@ X.post('/bank/getwork', async(req, res) => {
     rewardInfo = await generateRewardSlot(user)
   }
   if (rewardInfo.next_execution > new Date().getTime()) {
-    res.status(200).send({ response: `<red>Sorry, you can't use this for a little while.</red><br><br>hash_balance: ${rewardInfo.reward} G<br>lex: ${new Date(Math.round(rewardInfo.last_execution)).toLocaleString()}<br>req: ${new Date().toLocaleString()}<br><red>exe: ${new Date(Math.round(rewardInfo.next_execution)).toLocaleString()}</red><br>hash: ${rewardInfo.hash}` })
+    res.status(200).send({ response: `<red>Sorry, you can't use this for a little while.</red><br><br>hash_balance: ${rewardInfo.reward} G<br>lex: ${new Date(Math.round(rewardInfo.last_execution)).toLocaleString()}<br>req: ${new Date().toLocaleString()}<br><red>exe: ${new Date(Math.round(rewardInfo.next_execution)).toLocaleString()}</red><br>hash: <a class="phased" href="/bank/hash/${rewardInfo.hash}/${rewardInfo.key}">${rewardInfo.hash}` })
   } else {
     block = await gsmine.mine(user)
     Rewards.update({last_execution: block.execution, next_execution: block.claimWithin, hash: block.hash, key: block.nonce, reward: block.reward},{where:{user_id:user.user_id}})
@@ -643,7 +643,7 @@ X.get('/bank/hash/:hash/:nonce', async(req, res) => {
     res_data += `${block_open}<level>${rewardInfo.key}</level>${rewardInfo.hash}${block_close}`
     res_data += `${block_open}<a href="/ucp" class="phasedYel">OK: Claimed ${rewardInfo.reward} Gold</a>${block_close}`
   } else {
-    res_data += `${block_open}<a href="/ucp" class="phased">No Reward Found</a>${block_close}`
+    res_data += `${block_open}<a href="/ucp" class="phased">Reward hash has zero balance</a>${block_close}`
   }
 
   res.status(200).send(res_data)
