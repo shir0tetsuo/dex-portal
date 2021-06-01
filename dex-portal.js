@@ -638,7 +638,7 @@ X.get('/bank/hash/:hash/:nonce', async(req, res) => {
   res_data += `</div></div>`
 
   if (rewardInfo && rewardInfo.hash == hash && rewardInfo.key == nonce && rewardInfo.reward >= 1) {
-    await Users.update({gold: user.gold + rewardInfo.reward},{where: {user_id: user.user_id}})
+    await Users.update({gold: user.gold + rewardInfo.reward, mrecord: user.mrecord + 2},{where: {user_id: user.user_id}})
     await Rewards.update({reward: 0},{where: {user_id: user.user_id}})
     res_data += `${block_open}<level>${rewardInfo.key}</level>${rewardInfo.hash}${block_close}`
     res_data += `${block_open}<a href="/ucp" class="phasedYel">OK: Claimed ${rewardInfo.reward} Gold</a>${block_close}`
