@@ -572,6 +572,7 @@ X.get('/bank', async(req, res) => {
   pub_ver = await readFile('./part/pub_ver.html')
   top_head = await readFile('./part/top_head.html')
   bank = await readFile('./part/bank.html')
+  acptools = await readFile('./part/acptools.html')
   motd = await readFile('./part/motd.html')
 
   res_data = '';
@@ -586,6 +587,10 @@ X.get('/bank', async(req, res) => {
   res_data += `${bank}`
 
   res_data += `${motd}`
+
+  if (user.permission >= 3) {
+    res_data += `${acptools}`
+  }
 
   res.status(200).send(res_data)
 })
@@ -611,6 +616,32 @@ X.post('/bank/getwork', async(req, res) => {
   }
 
   console.log(200,'Bank-Roll',req.cookies.user_email)
+})
+
+X.get('/acp/resetreward', async(req, res) => {
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
+  user = await readPortalU(req.cookies.user_email)
+
+  if (user.permission >= 3) {
+    res.status(200).send({message: "REWARDS RESET"})
+    Rewards.update({last_execution: new Date().getTime(), next_execution: new Date().getTime()},{where:{user_id: user.user_id}})
+  } else {
+    res.status(200).send({message: "UNAUTHORIZED"})
+  }
+})
+
+X.get('/acp/seedpersonalaccount', async(req, res) => {
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
+  user = await readPortalU(req.cookies.user_email)
+
+  if (user.permission >= 3) {
+    res.status(200).send({message: "FUNDS SEEDED"})
+    Users.update({gold: user.gold + 1500, silver: user.silver + 2000},{where:{user_id: user.user_id}})
+  } else {
+    res.status(200).send({message: "UNAUTHORIZED"})
+  }
 })
 
 X.get('/bank/hash/:hash/:nonce', async(req, res) => {
@@ -1200,6 +1231,7 @@ X.get('/view/:id', async (req, res) => {
   pub_ver = await readFile('./part/pub_ver.html')
   top_head = await readFile('./part/top_head.html')
   tools = await readFile('./part/toolkit.html')
+  acptools = await readFile('./part/acptools.html')
   motd = await readFile('./part/motd.html')
 
   const { id } = req.params;
@@ -1409,6 +1441,9 @@ X.get('/view/:id', async (req, res) => {
 
     res_data += `${motd}`
 
+    if (user.permission >= 3) {
+      res_data += `${acptools}`
+    }
 
     res_data += `</body>` // closing tag
 
