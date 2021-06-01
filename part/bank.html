@@ -1,0 +1,26 @@
+<blockquote>
+  <div id="submitbox">
+    &nbsp;<input type="button" id="submit" value="Generate Gold">
+  </div>
+</blockquote>
+
+<blockquote>
+  <div id="server_error">
+    The return will be determined by luck and proof of work.
+  </div>
+</blockquote>
+
+<script>
+  let loader = `<div class="bouncing-loader"><div></div><div></div><div></div></div>`
+  $(document).ready(function(){
+    var Data = {};
+    $("#submit").click(function(){
+      document.getElementById('server_error').innerHTML = loader;
+      $.post("/bank/getwork",{}, function(data){
+        if(data) {
+          setInnerHTML('server_error',data.response)
+          }
+      });
+    });
+  });
+</script>

@@ -1,5 +1,6 @@
 const express = require('express');
 const chalk = require('chalk');
+const gsmine = require('./gsmine')
 
 require("dotenv").config();
 
@@ -17,7 +18,8 @@ const Sequelize = require('sequelize')
 
 let StartDate = new Date();
 
-var MapController = require('./controller/mapcontroller.js')
+let goldTimer = new Set();
+
 
 ///////// FUNCTIONS ////////////////////////////////////////////////////////////
 function zeroPad(num, places) {
@@ -30,6 +32,34 @@ function getRandomInt(max) {
 function genID() {
   return `1P${zeroPad(getRandomInt(999),3)}X${Date.now()}`
 }
+
+function generateRewardSlot(user){
+  try {
+    const tag = Rewards.create({
+      user_id: user.user_id,
+      last_execution: new Date().getTime(),
+      next_execution: new Date().getTime() - 1,
+      hash: "0",
+      key: "0",
+      reward: 0,
+    }).catch(e => {
+      //console.log(e)
+    })
+  } catch (e) {
+    //if (e.name === 'SequelizeUniqueConstraintError') console.log(chalk.greenBright(`DOCUMENT EXIST ${user_id}`))
+  } finally {
+    console.log('New User Reward Slot')
+  }
+  var tag = {};
+  tag.user_id = user.user_id,
+  tag.last_execution = new Date().getTime(),
+  tag.next_execution = new Date().getTime() - 1,
+  tag.hash = "0",
+  tag.key = "0",
+  tag.reward = 0;
+  return tag;
+}
+
 async function generateNode(M,address) {
   // write cell/node to database
   try {
@@ -226,6 +256,14 @@ async function readU(uid) {
   if (!user) return udummy();
   return user;
 }
+async function readReward(uid) {
+  pack = await Rewards.findOne({
+    where: {
+      user_id: uid
+    }
+  })
+  return pack;
+}
 async function readPortalU(email) {
   //console.log(email)
   if (!email) return udummy()
@@ -328,6 +366,39 @@ const Mission = sequelize.define('mission', {
     allowNull: false
   }
 })
+
+const Rewards = sequelize.define('rewards', {
+  user_id: {
+    type: Sequelize.STRING,
+    unique: true,
+  },
+  last_execution: {
+    type: Sequelize.STRING,
+    defaultValue: "0",
+    allowNull: false,
+  },
+  next_execution: {
+    type: Sequelize.STRING,
+    defaultValue: "0",
+    allowNull: false,
+  },
+  hash: {
+    type: Sequelize.STRING,
+    unique: true,
+  },
+  key: {
+    type: Sequelize.STRING,
+    defaultValue: 0,
+    allowNull: false,
+  },
+  reward: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+  }
+})
+// (uid).block -> (level*calculator)=next_execution,payout;
+
 const Users = sequelize.define('users', {
   user_id: {
     type: Sequelize.STRING,
@@ -378,6 +449,7 @@ const Users = sequelize.define('users', {
 });
 M.sync();
 Mission.sync();
+Rewards.sync();
 Users.sync();
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -440,7 +512,7 @@ X.get('/', async (req, res) => {
   res.status(200).send(res_data)
 })
 
-X.get('/test/:id', async (req, res) => MapController.test_view(req, res, M, Users));
+//X.get('/test/:id', async (req, res) => MapController.test_view(req, res, M, Users));
 
 X.get('/logoff', async (req, res) => {
   res.set('location','/')
@@ -494,6 +566,52 @@ X.get('/auth', async (req, res) => {
   res_data += `</html>`
   console.log(chalk.yellowBright('200 /auth'))
   res.status(200).send(res_data)
+})
+
+X.get('/bank', async(req, res) => {
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
+  header = await readFile('./part/header.html')
+  pub_ver = await readFile('./part/pub_ver.html')
+  top_head = await readFile('./part/top_head.html')
+  bank = await readFile('./part/bank.html')
+  motd = await readFile('./part/motd.html')
+
+  res_data = '';
+  res_data += `${header}`
+
+  res_data += `<body>` // top left elements
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<span title="Information"><a href="/">DEX//</a></span>Bank ${pub_ver}</div>`
+  res_data += `${top_head}` // logo
+  res_data += `bank`
+  res_data += `</div></div>`
+  res_data += `${bank}`
+
+  res.status(200).send(res_data)
+})
+
+X.post('/bank/getwork', async(req, res) => {
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
+
+  user = await readPortalU(req.cookies.user_email)
+
+  rewardInfo = await readReward(user.user_id)
+  if (!rewardInfo) {
+    rewardInfo = await generateRewardSlot(user)
+  }
+  if (rewardInfo.next_execution > new Date().getTime()) {
+    res.status(200).send({ response: `Sorry, you can't use this for a little while.<br><gold>${new Date().getTime()}</gold><br>${Math.round(rewardInfo.next_execution)}` })
+  } else {
+    block = await gsmine.mine(user)
+    Rewards.update({last_execution: block.execution, next_execution: block.claimWithin, hash: block.hash, key: block.nonce, reward: block.reward},{where:{user_id:user.user_id}})
+    res.status(200).send({
+      response: `work_start: ${block.timestamp}<br><level>${block.nonce}</level><blue>${block.hash}</blue>`
+    })
+  }
+
+
 })
 
 X.get('/leaders', async (req, res) => {

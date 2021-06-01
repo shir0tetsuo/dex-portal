@@ -2,7 +2,7 @@
   "name": "dex-portal",
   "version": "1.0.0",
   "description": "REST API TEST",
-  "main": "index.js",
+  "main": "dex-portal.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -22,6 +22,7 @@
     "canvas": "^2.7.0",
     "chalk": "^4.1.0",
     "cookie-parser": "^1.4.5",
+    "crypto-js": "^4.0.0",
     "discord-oauth2": "^2.6.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",

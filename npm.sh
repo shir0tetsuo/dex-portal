@@ -28,3 +28,4 @@ npm install --save sequelize
 npm install --save moment
 npm install --save canvas
 npm install --save socket.io
+npm install --save crypto-js
