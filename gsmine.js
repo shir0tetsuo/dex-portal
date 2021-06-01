@@ -12,7 +12,7 @@ class Block{
     this.hash = this.calculateHash();
     this.work = this.work(4);
     this.reward = Math.round(this.nonce/1000+(lvlDifficulty/2))
-    this.claimWithin = Math.round(new Date().getTime() + (1000*90*lvlDifficulty))
+    this.claimWithin = Math.round(new Date().getTime() + (1000*90*(lvlDifficulty+1)))
     //this.claimWithin = this.calculateNextExecution(this.nonce, lvlDifficulty) // 5 min
   }
 
