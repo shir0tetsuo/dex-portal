@@ -17,7 +17,7 @@ class Block{
   }
 
   calculateHash(){
-    return SHA256(this.timestamp + this.nonce).toString();
+    return SHA256(this.timestamp + this.execution + this.nonce).toString();
   }
 
   work(difficulty) {

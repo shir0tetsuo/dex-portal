@@ -18,9 +18,6 @@ const Sequelize = require('sequelize')
 
 let StartDate = new Date();
 
-let goldTimer = new Set();
-
-
 ///////// FUNCTIONS ////////////////////////////////////////////////////////////
 function zeroPad(num, places) {
   var zero = places - num.toString().length + 1;
@@ -588,6 +585,8 @@ X.get('/bank', async(req, res) => {
   res_data += `</div></div>`
   res_data += `${bank}`
 
+  res_data += `${motd}`
+
   res.status(200).send(res_data)
 })
 
@@ -602,16 +601,52 @@ X.post('/bank/getwork', async(req, res) => {
     rewardInfo = await generateRewardSlot(user)
   }
   if (rewardInfo.next_execution > new Date().getTime()) {
-    res.status(200).send({ response: `Sorry, you can't use this for a little while.<br><gold>${new Date().getTime()}</gold><br>${Math.round(rewardInfo.next_execution)}` })
+    res.status(200).send({ response: `<red>Sorry, you can't use this for a little while.</red><br><br>hash_balance: ${rewardInfo.reward} G<br>lex: ${new Date(Math.round(rewardInfo.last_execution)).toLocaleString()}<br>req: ${new Date().toLocaleString()}<br><red>exe: ${new Date(Math.round(rewardInfo.next_execution)).toLocaleString()}</red><br>hash: ${rewardInfo.hash}` })
   } else {
     block = await gsmine.mine(user)
     Rewards.update({last_execution: block.execution, next_execution: block.claimWithin, hash: block.hash, key: block.nonce, reward: block.reward},{where:{user_id:user.user_id}})
     res.status(200).send({
-      response: `work_start: ${block.timestamp}<br><level>${block.nonce}</level><blue>${block.hash}</blue>`
+      response: `${block.timestamp}<br><a href="/bank/hash/${block.hash}/${block.nonce}" class="phasedYel">${block.hash}</a>`
     })
   }
 
 
+})
+
+X.get('/bank/hash/:hash/:nonce', async(req, res) => {
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
+  user = await readPortalU(req.cookies.user_email)
+
+  header = await readFile('./part/header.html')
+  pub_ver = await readFile('./part/pub_ver.html')
+  top_head = await readFile('./part/top_head.html')
+  motd = await readFile('./part/motd.html')
+
+  const { hash, nonce } = req.params;
+
+  let rewardInfo = await readReward(user.user_id)
+
+  res_data = '';
+  res_data += `${header}`
+
+  res_data += `<body>` // top left elements
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<span title="Information"><a href="/">DEX//</a></span>Bank ${pub_ver}</div>`
+  res_data += `${top_head}` // logo
+  res_data += `bank`
+  res_data += `</div></div>`
+
+  if (rewardInfo && rewardInfo.hash == hash && rewardInfo.key == nonce && rewardInfo.reward >= 1) {
+    await Users.update({gold: user.gold + rewardInfo.reward},{where: {user_id: user.user_id}})
+    await Rewards.update({reward: 0},{where: {user_id: user.user_id}})
+    res_data += `${block_open}<level>${rewardInfo.key}</level>${rewardInfo.hash}${block_close}<br>`
+    res_data += `${block_open}<a href="/ucp" class="phasedYel">Claimed ${rewardInfo.reward} Gold</a>${block_close}`
+  } else {
+    res_data += `${block_open}<a href="/ucp" class="phased">No Reward Found</a>${block_close}`
+  }
+
+  res.status(200).send(res_data)
 })
 
 X.get('/leaders', async (req, res) => {
@@ -1047,7 +1082,8 @@ X.get('/ucp', async (req, res) => {
       ownedGoldValue += parseInt(tagList[i].gold)
     }
 
-    res_data += `<gold>${ownedGoldValue} G</gold>, ${ownedSilverValue} S <gold>in ${Properties} Nodes</gold>`
+    res_data += `<gold>${ownedGoldValue} G</gold>, ${ownedSilverValue} S <gold>in ${Properties} Nodes</gold><br>`
+    res_data += `<a href="/bank" class="phasedYel">Generate Gold</a>`
     res_data += `${block_close}</div>`
 
     console.log(chalk.yellowBright('200 /ucp',req.cookies.user_email))
