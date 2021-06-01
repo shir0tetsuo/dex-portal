@@ -632,16 +632,16 @@ X.get('/bank/hash/:hash/:nonce', async(req, res) => {
 
   res_data += `<body>` // top left elements
   res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
-  res_data += `<span title="Information"><a href="/">DEX//</a></span>Bank ${pub_ver}</div>`
+  res_data += `<span title="Information"><a href="/">DEX//</a><a href="/ucp">UCP//</a></span>Bank ${pub_ver}</div>`
   res_data += `${top_head}` // logo
-  res_data += `bank`
+  res_data += `Hash_Pay`
   res_data += `</div></div>`
 
   if (rewardInfo && rewardInfo.hash == hash && rewardInfo.key == nonce && rewardInfo.reward >= 1) {
     await Users.update({gold: user.gold + rewardInfo.reward},{where: {user_id: user.user_id}})
     await Rewards.update({reward: 0},{where: {user_id: user.user_id}})
-    res_data += `${block_open}<level>${rewardInfo.key}</level>${rewardInfo.hash}${block_close}<br>`
-    res_data += `${block_open}<a href="/ucp" class="phasedYel">Claimed ${rewardInfo.reward} Gold</a>${block_close}`
+    res_data += `${block_open}<level>${rewardInfo.key}</level>${rewardInfo.hash}${block_close}`
+    res_data += `${block_open}<a href="/ucp" class="phasedYel">OK: Claimed ${rewardInfo.reward} Gold</a>${block_close}`
   } else {
     res_data += `${block_open}<a href="/ucp" class="phased">No Reward Found</a>${block_close}`
   }
