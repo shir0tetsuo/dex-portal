@@ -579,7 +579,7 @@ X.get('/bank', async(req, res) => {
 
   res_data += `<body>` // top left elements
   res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
-  res_data += `<span title="Information"><a href="/">DEX//</a></span>Bank ${pub_ver}</div>`
+  res_data += `<span title="Information"><a href="/">DEX//</a><a href="/ucp">UCP//</a></span>Bank ${pub_ver}</div>`
   res_data += `${top_head}` // logo
   res_data += `bank`
   res_data += `</div></div>`
@@ -610,7 +610,7 @@ X.post('/bank/getwork', async(req, res) => {
     })
   }
 
-
+  console.log(200,'Bank-Roll',req.cookies.user_email)
 })
 
 X.get('/bank/hash/:hash/:nonce', async(req, res) => {
