@@ -261,6 +261,14 @@ async function readReward(uid) {
   })
   return pack;
 }
+async function readRewardHashed(hash) {
+  pack = await Rewards.findOne({
+    where: {
+      hash: hash
+    }
+  })
+  return pack;
+}
 async function readPortalU(email) {
   //console.log(email)
   if (!email) return udummy()
@@ -656,7 +664,7 @@ X.get('/bank/hash/:hash/:nonce', async(req, res) => {
 
   const { hash, nonce } = req.params;
 
-  let rewardInfo = await readReward(user.user_id)
+  let rewardInfo = await readRewardHashed(hash)
 
   res_data = '';
   res_data += `${header}`
@@ -670,7 +678,7 @@ X.get('/bank/hash/:hash/:nonce', async(req, res) => {
 
   if (rewardInfo && rewardInfo.hash == hash && rewardInfo.key == nonce && rewardInfo.reward >= 1) {
     await Users.update({gold: user.gold + rewardInfo.reward, mrecord: user.mrecord + 2},{where: {user_id: user.user_id}})
-    await Rewards.update({reward: 0},{where: {user_id: user.user_id}})
+    await Rewards.update({reward: 0},{where: {hash: hash}})
     res_data += `${block_open}<level>${rewardInfo.key}</level>${rewardInfo.hash}${block_close}`
     res_data += `${block_open}<a href="/ucp" class="phasedYel">OK: Claimed ${rewardInfo.reward} Gold</a>${block_close}`
   } else {
