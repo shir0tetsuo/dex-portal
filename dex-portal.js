@@ -35,13 +35,16 @@ class ResponseBlock{
     // pagename like "bank", bodyloader or <body>, top_extended can be blank
     if (!bodyloader) bodyloader = '<body>'
     if (!top_extended) top_extended = ''
-    fhead = readFile('./part/header.html')
-    fpubver = readFile('./part/pub_ver.html')
-    ftophead = readFile('./part/top_head.html')
-    motd = readFile('./part/motd.html')
     this.pagename = pagename,
-    this.header = `${fhead}${bodyloader}<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span><span title="Information"><a href="/">DEX//</a>${top_extended}${pagename} ${fpubver}</div>${ftophead}${pagename}</div></div>`,
-    this.footer = `${motd}`
+    this.header = `${this.loadBlob(0)}${bodyloader}<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span><span title="Information"><a href="/">DEX//</a>${top_extended}${pagename} ${this.loadBlob(1)}</div>${this.loadBlob(2)}${pagename}</div></div>`,
+    this.footer = this.loadBlob(3)
+  }
+
+  async loadBlob(int){
+    if (int == 0) return await readFile('./part/header.html')
+    if (int == 1) return await readFile('./part/pub_ver.html')
+    if (int == 2) return await readFile('./part/top_head.html')
+    if (int == 3) return await readFile('./part/motd.html')
   }
 }
 
