@@ -30,6 +30,22 @@ function genID() {
   return `1P${zeroPad(getRandomInt(999),3)}X${Date.now()}`
 }
 
+class ResponseBlock{
+  constructor(pagename,bodyloader,top_extended){
+    // pagename like "bank", bodyloader or <body>, top_extended can be blank
+    if (!bodyloader) bodyloader = '<body>'
+    if (!top_extended) top_extended = ''
+    fhead = readFile('./part/header.html')
+    fpubver = readFile('./part/pub_ver.html')
+    ftophead = readFile('./part/top_head.html')
+    motd = readFile('./part/motd.html')
+    this.pagename = pagename,
+    this.header = `${fhead}${bodyloader}<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span><span title="Information"><a href="/">DEX//</a>${top_extended}${pagename} ${fpubver}</div>${ftophead}${pagename}</div></div>`,
+    this.footer = `${motd}`
+  }
+}
+
+
 function generateRewardSlot(user){
   try {
     const tag = Rewards.create({
@@ -576,25 +592,27 @@ X.get('/auth', async (req, res) => {
 X.get('/bank', async(req, res) => {
   flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
   if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
-  header = await readFile('./part/header.html')
-  pub_ver = await readFile('./part/pub_ver.html')
-  top_head = await readFile('./part/top_head.html')
+  //header = await readFile('./part/header.html')
+  //pub_ver = await readFile('./part/pub_ver.html')
+  //top_head = await readFile('./part/top_head.html')
   bank = await readFile('./part/bank.html')
   acptools = await readFile('./part/acptools.html')
-  motd = await readFile('./part/motd.html')
+  //motd = await readFile('./part/motd.html')
 
   res_data = '';
-  res_data += `${header}`
+  /*res_data += `${header}`
 
   res_data += `<body>` // top left elements
   res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
   res_data += `<span title="Information"><a href="/">DEX//</a><a href="/ucp">UCP//</a></span>Bank ${pub_ver}</div>`
   res_data += `${top_head}` // logo
   res_data += `bank`
-  res_data += `</div></div>`
+  res_data += `</div></div>`*/
+  const block = new ResponseBlock('bank','<body>','<a href="/ucp">UCP//</a>')
+  res_data += `${block.header}`
   res_data += `${bank}`
 
-  res_data += `${motd}`
+  res_data += `${block.footer}`
 
   if (user.permission >= 3) {
     res_data += `${acptools}`
