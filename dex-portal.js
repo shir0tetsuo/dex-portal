@@ -625,7 +625,7 @@ X.get('/bank', async(req, res) => {
   res_data += `${top_head}` // logo
   res_data += `bank`
   res_data += `</div></div>`*/
-  const block = generateResponseBlock('bank','<body>','<a href="/ucp">UCP//</a>')
+  const block = await generateResponseBlock('bank','<body>','<a href="/ucp">UCP//</a>')
   res_data += `${block.generated}`
   res_data += `${bank}`
 
