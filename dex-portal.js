@@ -30,13 +30,27 @@ function genID() {
   return `1P${zeroPad(getRandomInt(999),3)}X${Date.now()}`
 }
 
-class ResponseBlock{
+async function generateResponseBlock(pgname,body_loaded,url_extension){
+  if (!pgname) pgname = 'Untitled'
+  if (!body_loaded) body_loaded = '<body>'
+  if (!url_extension) url_extension = ''
+
+  var tag = {};
+  tag.h = await readFile('./part/header.html'),
+  tag.v = await readFile('./part/pub_ver.html'),
+  tag.imgh = await readFile('./part/top_head.html'),
+  tag.motd = await readFile('./part/motd.html');
+
+  tag.generated = `${tag.h}${body_loaded}<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span><span title="Information"><a href="/">DEX//</a>${url_extension}${pgname} ${tag.v}</div>${tag.imgh}${pgname}</div></div>`;
+  return tag;
+}
+
+/*class ResponseBlock{
   constructor(pagename,bodyloader,top_extended){
     // pagename like "bank", bodyloader or <body>, top_extended can be blank
     if (!bodyloader) bodyloader = '<body>'
     if (!top_extended) top_extended = ''
     this.pagename = pagename,
-    this.header = `${this.loadBlob(0)}${bodyloader}<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span><span title="Information"><a href="/">DEX//</a>${top_extended}${pagename} ${this.loadBlob(1)}</div>${this.loadBlob(2)}${pagename}</div></div>`,
     this.footer = this.loadBlob(3)
   }
 
@@ -47,7 +61,7 @@ class ResponseBlock{
     if (int == 3) return await readFile('./part/motd.html')
   }
 }
-
+*/
 
 function generateRewardSlot(user){
   try {
@@ -611,11 +625,11 @@ X.get('/bank', async(req, res) => {
   res_data += `${top_head}` // logo
   res_data += `bank`
   res_data += `</div></div>`*/
-  const block = new ResponseBlock('bank','<body>','<a href="/ucp">UCP//</a>')
-  res_data += `${block.header}`
+  const block = generateResponseBlock('bank','<body>','<a href="/ucp">UCP//</a>')
+  res_data += `${block.generated}`
   res_data += `${bank}`
 
-  res_data += `${block.footer}`
+  res_data += `${block.motd}`
 
   if (user.permission >= 3) {
     res_data += `${acptools}`
