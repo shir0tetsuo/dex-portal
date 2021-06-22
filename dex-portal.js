@@ -1389,7 +1389,7 @@ X.get('/view/:id', async (req, res) => {
     if (req.cookies.user_email && req.cookies.hashed_pwd) var box_provider = `<a onclick="poptoast('ebox')"><span style="font-family: devicons; font-weight: normal; font-style: normal; font-size: 25px;" ><green>&#xe664;</green></span></a>`;
 
     var disp_right = '';
-    disp_right = `<div class="display-corner-right"><img src="https://shadowsword.tk/img/avaira/${ident_img}">`
+    disp_right = `<div class="display-corner-right"><img src="https://cdn.shadowsword.tk/avaira/${ident_img}">`
     disp_right += `<div class="bottom-right"><span title="Identity">(${BYTE.identity})</span></div>`
     disp_right += `<div class="top-gold"><span title="Cost Gold">${BYTE.gold} G</span></div>`
     disp_right += `<div class="top-edgebar"><span title="Controls">${box_provider}</span></div>`
