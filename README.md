@@ -14,7 +14,7 @@ There is a bank that can donate shareable hashes and keys to obtain funds. This 
 # Building
 This requires the avaira sql database from the avaira project.
 
-Dependencies are listed in `npm.sh` otherwise see https://cdn.shadowsword.tk/ as components (CSS, JS, images) are stored here. This wasn't designed with external users in mind, sorry.
+Dependencies are listed in `npm.sh` otherwise see https://cdn.shadowsword.tk/ as components (CSS, JS, images) are stored here. This wasn't designed with external users in mind, sorry. At some point I will take the time to add those files to Github.
 
 Tested working through Caddy's proxy.
 
