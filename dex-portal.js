@@ -41,7 +41,7 @@ async function generateResponseBlock(pgname,body_loaded,url_extension){
   tag.imgh = await readFile('./part/top_head.html'),
   tag.motd = await readFile('./part/motd.html');
 
-  tag.generated = `${tag.h}${body_loaded}<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span><span title="Information"><a href="/">DEX//</a>${url_extension}${pgname} ${tag.v}</div>${tag.imgh}${pgname}</div></div>`;
+  tag.generated = `${tag.h}${body_loaded}<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span><span title="Information"><a href="/">DEX//</a>${url_extension}${pgname} ${tag.v}</div>${tag.imgh}${pgname}</div></div>`;
   return tag;
 }
 
@@ -532,7 +532,7 @@ X.get('/', async (req, res) => {
   var res_data = '';
   res_data += `${header}`
   res_data += `<body>` // top left elements
-  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span>`
   res_data += `<span title="Jump To Random Location"><a href="#" onclick="getRandLoc()">DEX//</a></span>Information ${pub_ver}</div>`
   res_data += `${top_head}information</div></div>`
   res_data += `${block_open}<div class="loginbox"><a class="phased" href="/auth">Login/Logout</a> &nbsp;&nbsp;<span title="Jump To Random Location"><a href="#" onclick="getRandLoc()"><level><u>Enter</u></level></a></span><br><br>(${req.cookies.user_email})</div>${block_close}`
@@ -589,7 +589,7 @@ X.get('/auth', async (req, res) => {
   var res_data = '';
   res_data += `${header}`
   res_data += `<body onLoad="loadGateway()">` // top left elements
-  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span>`
   res_data += `<span title="Information"><a href="/">DEX//</a></span>Gateway ${pub_ver}</div>`
   res_data += `${top_head}Authorize</div></div>`
   res_data += `${rules}`
@@ -620,7 +620,7 @@ X.get('/bank', async(req, res) => {
   /*res_data += `${header}`
 
   res_data += `<body>` // top left elements
-  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span>`
   res_data += `<span title="Information"><a href="/">DEX//</a><a href="/ucp">UCP//</a></span>Bank ${pub_ver}</div>`
   res_data += `${top_head}` // logo
   res_data += `bank`
@@ -705,7 +705,7 @@ X.get('/bank/hash/:hash/:nonce', async(req, res) => {
   res_data += `${header}`
 
   res_data += `<body>` // top left elements
-  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span>`
   res_data += `<span title="Information"><a href="/">DEX//</a><a href="/ucp">UCP//</a></span>Bank ${pub_ver}</div>`
   res_data += `${top_head}` // logo
   res_data += `Hash_Pay`
@@ -734,7 +734,7 @@ X.get('/leaders', async (req, res) => {
   res_data += `${header}`
 
   res_data += `<body>` // top left elements
-  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span>`
   res_data += `<span title="Information"><a href="/">DEX//</a></span>Leaderboard ${pub_ver}</div>`
 
   const list_maxgold = await Users.findAll({
@@ -812,7 +812,7 @@ X.get('/mission/:page', async (req, res) => {
   res_data += `${header}`
 
   res_data += `<body>` // top left elements
-  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span>`
   res_data += `<span title="Information"><a href="/">MISSION//</a></span><red>PAGE ${page}</red> ${pub_ver}</div>`
 
   res_data += `${top_head}bounty</div></div>`
@@ -1049,7 +1049,7 @@ X.get('/user/:uid', async (req, res) => {
   res_data += `${header}`
 
   res_data += `<body>` // top left elements
-  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span>`
   res_data += `<span title="Information"><a href="/">DEX//</a></span>${uid} ${pub_ver}</div>`
 
   res_data += `${top_head}` // logo
@@ -1121,7 +1121,7 @@ X.get('/ucp', async (req, res) => {
     res_data += `${header}`
 
     res_data += `<body>` // top left elements
-    res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+    res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span>`
     res_data += `<span title="Information"><a href="/">DEX//</a></span>User Control Panel ${pub_ver}</div>`
 
     res_data += `${top_head}` // logo
@@ -1208,7 +1208,7 @@ X.get('/edit/:id', async (req, res) => {
   res_data += `${header}`
 
   res_data += `<body onLoad="loadEditCtrl()">` // top left elements
-  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+  res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span>`
   res_data += `<span title="Information"><a href="/">DEX//</a></span><a href="/view/${id}">${id}</a> ${pub_ver}</div>`
 
   res_data += `${top_head}` // logo
@@ -1358,10 +1358,13 @@ X.get('/view/:id', async (req, res) => {
       BYTE.coordinate = `<b><span title="node-empty-in-database">(Error)</span></b>`
     }
 
+    // TO EXPAND THE ARRAY: PART I
+    // ADD TO COLLECTION HERE
+    // THEN CHANGE CDN.SHADOWSWORD DEX UTIL JS (LINE 22+)
     ident_img_array = [
       '1_city','2_nIV','3_spar','4_spar','5_spar','6_defconstruct',
       '7_railgun','8_nithya','9_dark','10_arirealm','11_arigate','12_NULL','13_astragate','14_lightgate','15_construct','16_wormhole',
-      '17_star','18_star','19_other','20_void','21_star'
+      '17_star','18_star','19_other','20_void','21_star','22_blacksand','23_blacksand','24_protected'
     ]
 
     if (!BYTE.identity) {
@@ -1389,7 +1392,7 @@ X.get('/view/:id', async (req, res) => {
     if (req.cookies.user_email && req.cookies.hashed_pwd) var box_provider = `<a onclick="poptoast('ebox')"><span style="font-family: devicons; font-weight: normal; font-style: normal; font-size: 25px;" ><green>&#xe664;</green></span></a>`;
 
     var disp_right = '';
-    disp_right = `<div class="display-corner-right"><img src="https://cdn.shadowsword.tk/avaira/${ident_img}">`
+    disp_right = `<div class="display-corner-right"><img src="https://cdn.shadowsword.ca/avaira/${ident_img}">`
     disp_right += `<div class="bottom-right"><span title="Identity">(${BYTE.identity})</span></div>`
     disp_right += `<div class="top-gold"><span title="Cost Gold">${BYTE.gold} G</span></div>`
     disp_right += `<div class="top-edgebar"><span title="Controls">${box_provider}</span></div>`
@@ -1440,7 +1443,7 @@ X.get('/view/:id', async (req, res) => {
     res_data += `${header}`
 
     res_data += `<body onLoad="loadPortal()">` // top left elements
-    res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.tk/">SSTK//</a></span>`
+    res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span>`
     res_data += `<span title="Information"><a href="/">DEX//</a></span>${zeroPad(xxx,3)}${zeroPad(yyy,3)} ${pub_ver}</div>`
 
     res_data += `${top_head}` // logo
