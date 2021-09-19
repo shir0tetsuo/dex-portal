@@ -4,11 +4,17 @@
   <a href="#" onclick="getRandLoc()"><randbutton><u>Random</u></randbutton></a>
   <!--[conversion]-->
   <a onclick="poptoast('convertbox')"><blue><u>lat,lon</u></blue></a>
-  <a href="/auth" class="phased" id="login-ctrl"></a>
+  <a onclick="poptoast('usercontrol')" class="phasedYel"><u><gold>CTRL</gold></u></a>
   <a href="#" id="json-export"><jsonbutton><u>.json</u></jsonbutton></a>
 </blockquote>
 
 <blockquote class="toast" id="convertbox">
   lat <input type="number" size="10" id="cvlat" /> lon <input type="number" size="10" id="cvlon" /> <a onclick="gotoLong()"><b>GO</b></a>
+
+</blockquote>
+
+<blockquote class="toast" id="usercontrol">
+  &nbsp;<a href="/auth" class="phased" id="login-ctrl"></a>
+  &nbsp;<a href="#" class="phasedYel" onclick="GeoConnect()">Use My Location</a>
 </blockquote>
 <!-- TOOLKIT END -->
