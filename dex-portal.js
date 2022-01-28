@@ -1,8 +1,11 @@
 const express = require('express');
 const chalk = require('chalk');
 const gsmine = require('./gsmine')
+const newEHash = require('./newEHash')
 
 require("dotenv").config();
+
+const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY) // $ => G,S
 
 const bcrypt = require('bcrypt') // https://www.npmjs.com/package/bcrypt
 const saltRounds = 10;
@@ -13,8 +16,20 @@ const cookies = require('cookie-parser') //https://stackoverflow.com/questions/1
 const X = express(); //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
 const PORT = 4000;
 
+const ff = require('fs') // stripe update
 const fs = require("fs").promises;
 const Sequelize = require('sequelize')
+
+var storeclient = {} // stripe update
+/////////////// stripe storefront /////////////////////
+ff.readdir('./storemodel/', (err, files) => {
+  if (err) console.err(err);
+  console.log(`Loaded ${files.length} store items.`)
+  files.forEach(f => {
+    let fileread = require(`./storemodel/${f}`);
+    storeclient[fileread.dat.name] = fileread.dat;
+  })
+})
 
 let StartDate = new Date();
 
@@ -28,6 +43,10 @@ function getRandomInt(max) {
 }
 function genID() {
   return `1P${zeroPad(getRandomInt(999),3)}X${Date.now()}`
+}
+
+function binSplit(binary) {
+  return binary.split('')
 }
 
 async function generateResponseBlock(pgname,body_loaded,url_extension){
@@ -44,6 +63,7 @@ async function generateResponseBlock(pgname,body_loaded,url_extension){
   tag.generated = `${tag.h}${body_loaded}<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span><span title="Information"><a href="/">DEX//</a>${url_extension}${pgname} ${tag.v}</div>${tag.imgh}${pgname}</div></div>`;
   return tag;
 }
+
 
 /*class ResponseBlock{
   constructor(pagename,bodyloader,top_extended){
@@ -114,6 +134,10 @@ async function generateNode(M,address) {
 
 async function rMapNode(M,addr) {
   return node = await M.findOne({ where: { coordinate: addr }})
+}
+
+async function rEntity(e){
+  return x = await Spiridex.findOne({ where: { ent_hash: e }})
 }
 
 async function umr(Users,user_email) {
@@ -485,10 +509,57 @@ const Users = sequelize.define('users', {
     unique: true,
   }
 });
-M.sync();
-Mission.sync();
-Rewards.sync();
-Users.sync();
+const Spiridex = sequelize.define('spiridex', {
+  owner_id: {// user_id owning dex node
+    type: Sequelize.STRING,
+  },
+  ent_hash: {// unique entity/dex hash
+    type: Sequelize.STRING,
+    defaultValue: 0,
+    allowNull: false,
+  },
+  ent_name: {// entity name
+    type: Sequelize.STRING,
+  },
+  ent_description: {// entity description
+    type: Sequelize.STRING,
+  },
+  ent_spatiality: {// 0 soul, 1 mental, 2 ethereal, 3 physical, 4 astral, 5 higher astral, 6 unknown
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+  },
+  ent_class: {// 0 energyform/whisp, 1 sprite/shard/dryad/guunshii, 2 mundane/unawoken, 3 lower fae/djinn/otherkin/angel,
+    type: Sequelize.INTEGER,// 4 mythical/cryptid, 5 higher fae/djinn/otherkin/angel, 6 planetary celestial, 7 sol celestial,
+    defaultValue: 0,// 8 unknown, 9 egregore/construct
+    allowNull: false,
+  },
+  ent_color: {// 0 black, 1 red, 2 orange, 3 yellow, 4 green, 5 blue, 6 indigo, 7 purple, 8 white, 9 gold, 10 rose gold
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+  },
+  ent_elemental: {// binary notation of present elements
+    type: Sequelize.STRING,// 0 light 1 dark 2 cosmic 3 divine 4 soul 5 air 6 fire 7 earth 8 water
+    defaultValue: '000000000',
+    allowNull: false,
+  },
+  ent_img: {// A user-defined image
+    type: Sequelize.STRING,
+    defaultValue: 'nothing',
+    allowNull: false,
+  },
+  ref_type: {// 0 Article (Like if you are writing about a general creature), 1 Journal/Observation
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+  }
+});
+M.sync(); // DEX MAP
+Mission.sync(); // MISSIONS
+Rewards.sync(); // BANK REWARDS
+Users.sync(); // USER PROFILE
+Spiridex.sync();
 ////////////////////////////////////////////////////////////////////////////////
 
 const block_open = `<blockquote>`
@@ -503,7 +574,7 @@ X.listen(
 
 // Parse as json
 X.use(express.json());
-X.use(bparse.urlencoded({ extended: false }));
+X.use(bparse.urlencoded({ extended: true }));
 X.use(bparse.json());
 X.use(cookies())
 // load /img/ media from folder 'img'
@@ -515,6 +586,9 @@ X.use(function(err, req, res, next) {
   console.error(err.stack);
   //res.status(500).send('500 PLEASE CONTACT ADMINISTRATOR')
 })
+
+// Stripe update
+//X.request(express.json())
 
 // .get or .post (or .delete?)
 
@@ -539,7 +613,11 @@ X.get('/', async (req, res) => {
   res_data += `${block_open}<br>`
   res_data += `System up since ${StartDate}<br><br>`
   res_data += `${block_close}`
-  if (req.cookies.user_email == "Not Logged In") res_data += `${index}`
+  if (req.cookies.user_email == "Not Logged In") {
+    res_data += `${index}`
+  } else {
+    res_data += `${block_open}<div class="loginbox"><a href="/storefront" class="phasedRed"><red><u>Store</u></red></a> - Support development, get Avaira Account credits</div>${block_close}`
+  }
   //res_data += `${index}`
 
   res_data += `${motd}`
@@ -574,6 +652,81 @@ X.get('/start_instance', async (req, res) => {
   })
 })*/
 
+
+X.get('/storefront', async (req, res) => {
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
+  user = await readPortalU(req.cookies.user_email)
+  const block = await generateResponseBlock('storefront','<body onLoad="loadStorePortal()">','<a href="/ucp">UCP//</a>')// UI Handler 2.0
+
+  res_data = block.generated;
+  motd = await readFile('./part/motd.html')
+
+
+  res_data += `${block_open}`
+  res_data += `<div class="loginbox"><red>${user.portalemail}</red>`
+  res_data += `<br><br>Your Avaira Account has <u>${user.gold}</u> G & <u>${user.silver}</u> S.<br>`
+  res_data += `Either may be purchased here.`
+  res_data += `</div>${block_close}`
+
+  res_data += `${block_open}<div class="loginbox">`
+  for (item in storeclient) {
+    if (storeclient[item].enabled == true) {
+      res_data += `<b>${storeclient[item].nameInShop}</b><br>`
+      res_data += `Quantity: <input class="storeQTY" type="number" id="${storeclient[item].name}" size="5" value="0">`
+    }
+    else {
+      res_data += `<b>${storeclient[item].nameInShop}</b><br>`
+      res_data += `Quantity: (Unavailable)`
+    }
+    res_data += `<br><br>`
+  }
+  res_data += `<input type="button" onclick="returnStoreCheckout()" value="Purchase"></div>${block_close}`
+
+
+  res_data += `${block_open}Questions/Comments/Concerns regarding account, payment, code, please contact `
+  res_data += `shadowsword@protonmail.com; Your payment may be non-refundable. Processed through Stripe. `
+  res_data += `Help contribute to the operation of our server and we'll give you digital tokens to play around in `
+  res_data += `our Realmdex.${block_close}`
+
+  res_data += `${motd}`
+
+  res.status(200).send(res_data)
+})
+
+X.post('/storefront/chkout', async (req, res) => {
+  // payment mode can be subscription
+  reqData = Object.assign({},req.body)
+  if (!reqData.chkout) return res.status(500).json({ error: 'Nothing to buy.' })
+  lineItems = reqData.chkout.map(item => {
+    const storeItem = storeclient[item.name]
+    return {
+      price_data: {
+        currency: 'cad',
+        product_data: {
+          name: storeItem.name
+        },
+        unit_amount: storeItem.priceInCents
+      },
+      quantity: item.value
+    }
+  })
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: lineItems,
+      success_url: `${process.env.SERVER_URL}/storefront/paysuccess`,
+      cancel_url: `${process.env.SERVER_URL}/storefront`
+    }).then((paymessage) => {
+      console.log('SUCCESS!')
+      console.log(paymessage)
+    })
+    res.json({ url: session.url })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
 
 /// AUTH START /////////////////////////////////////////////////////////////////
 X.get('/auth', async (req, res) => {
@@ -625,7 +778,7 @@ X.get('/bank', async(req, res) => {
   res_data += `${top_head}` // logo
   res_data += `bank`
   res_data += `</div></div>`*/
-  const block = await generateResponseBlock('bank','<body>','<a href="/ucp">UCP//</a>')
+  const block = await generateResponseBlock('bank','<body>','<a href="/ucp">UCP//</a>')// UI Handler 2.0
   res_data += `${block.generated}`
   res_data += `${bank}`
 
@@ -639,7 +792,7 @@ X.get('/bank', async(req, res) => {
 })
 
 X.post('/bank/getwork', async(req, res) => {
-  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)// Authorization 2.0
   if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
 
   user = await readPortalU(req.cookies.user_email)
@@ -860,10 +1013,14 @@ X.get('/buy/:id', async (req, res) => {
   flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
   if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
   const { id } = req.params;
-  Node = await readM(id)
+  Node = await readM(id) // in this case it's the node number
   if (!Node) return res.status(400).send({
     error: "BAD METHOD"
   })
+
+  user = await readPortalU(req.cookies.user_email);
+
+  console.log(user.silver)
 
   if (user.silver < Node.silver || user.gold < Node.gold) return res.status(400).send({
     error: "USER NOT ENOUGH FUNDS"
@@ -879,9 +1036,9 @@ X.get('/buy/:id', async (req, res) => {
   user_silver = user.silver - Node.silver;
   user_mrecord = user.mrecord + 1;
 
-  Users.update({ gold: user_gold, silver: user_silver, mrecord: user_mrecord },{ where:{ user_id: user.user_id }})
+  await Users.update({ gold: user_gold, silver: user_silver, mrecord: user_mrecord },{ where:{ user_id: user.user_id }})
 
-  M.update({ owner_id: user.user_id },{where: { coordinate: Node.coordinate }})
+  await M.update({ owner_id: user.user_id },{where: { coordinate: id }});
   redirect = await readFile('./part/301.html')
   console.log('301 PURCHASE',req.cookies.user_email)
   res.status(200).send(redirect)
@@ -1158,7 +1315,7 @@ X.get('/ucp', async (req, res) => {
     }
 
     res_data += `<gold>${ownedGoldValue} G</gold>, ${ownedSilverValue} S <gold>in ${Properties} Nodes</gold><br>`
-    res_data += `<a href="/bank" class="phasedYel">Generate Gold</a>`
+    res_data += `<a href="/bank" class="phasedYel">Generate Gold</a>&nbsp;&nbsp;<a href="/spiridex" class="phased">Enter Spiridex</a>`
     res_data += `${block_close}</div>`
 
     console.log(chalk.yellowBright('200 /ucp',req.cookies.user_email))
@@ -1497,6 +1654,126 @@ X.get('/view/:id', async (req, res) => {
     console.log(chalk.blueBright(`200 ${id} ${req.cookies.user_email}`))
     res.status(200).send(res_data)
   }
+})
+
+////////////////////////////////////////////////////////////////////////////////
+// SPIRIDEX
+// -- BACKEND DATABASE: DONE! (Spiridex 'spiridex')
+// -- CSS: Work In Progress
+// -- TODO: [C][R][U][D]
+// C - /spiridex/new
+// R - /spiridex, /spiridex/:hash
+// U - /spiridex/modify/:hash
+// D - /spiridex/modify/:hash
+////////////////////////////////////////////////////////////////////////////////
+
+// EXAMPLE of Authorization 2.0 and UI Handler 2.0
+
+X.get('/spiridex', async(req,res) => {
+
+  // Spiridex Root
+  // -- Spiridex Hash
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd) // Authorization 2.0
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
+  user = await readPortalU(req.cookies.user_email)
+
+  // TODO: Need to work on this file. Description of program, headers etc.
+  spdex_home = await readFile('./part/spiridex_home.html')
+
+  // TODO: load spiridex db for local user
+
+  // generate UI
+  const block = await generateResponseBlock('spiridex','<body>','<a href="/ucp">UCP//</a>') // UI Handler 2.0
+  var res_data = '';
+  res_data += `${block.generated}`
+
+  res_data += `${spdex_home}`
+
+  res_data += `${block_open}${user.portalemail}'s <b>Entities:</b>`
+  const tagList = await Spiridex.findAll({ where: { owner_id: user.user_id } })
+  entities_total = tagList.length
+  var creation_math = Math.floor((((entities_total)+1)*3)-5)
+
+  if (creation_math < 15) creation_math = 15
+
+  var creation_button = '';
+  if (entities_total < 500) {
+    creation_button += `<a id="c" class="phased" href="/spiridex/new">+ Create Entity (${creation_math}G)</a><br><br>`
+  }
+
+  res_data += `<br><div class="userPropertyBox" style="position: relative">`
+  res_data += `${creation_button}`
+  for (i = 0; i < entities_total; i++) {
+    res_data += `<div class="phasedYel">`
+    res_data += `<a class="phasedYel" href="/spiridex/${tagList[i].ent_hash}">${tagList[i].ent_hash.substring(0,9)}..</a> <gold>"${tagList[i].ent_name}"</gold> <level>id ${tagList[i].id}</level><br>`
+    res_data += `(Created: ${tagList[i].createdAt})<br>`
+    res_data += `(Modified: ${tagList[i].updatedAt})<br>`
+    res_data += `<gold>"${tagList[i].ent_description}"</gold>`
+    if (i > 1) {
+      res_data += ` <a class="phasedYel" href="#c">top</a>`
+    }
+    res_data += `</div><br>`
+  }
+  res_data += `</div>`
+  res_data += `${block_close}`
+
+  res_data += ``
+
+  res_data += `${block.motd}`
+  //res_data += `${block_open}${block_close}`
+
+  // send
+  console.log(200,'Spiridex',req.cookies.user_email)
+  res.status(200).send(res_data)
+})
+
+X.get('/spiridex/new', async(req,res) => {
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd) // Authorization 2.0
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
+  user = await readPortalU(req.cookies.user_email)
+  const EHash = await newEHash.mine(user)
+
+  const block = await generateResponseBlock('new entity','<body>','<a href="/ucp">UCP//</a><a href="/spiridex">spiridex//</a>') // UI Handler 2.0
+  var res_data = '';
+  res_data += `${block.generated}`
+  res_data += `${block_open}Entity Hash:<br><level>${EHash.hash}</level>${block_close}`
+  res_data += `${block.motd}`
+  res.status(200).send(res_data)
+})
+
+X.get('/spiridex/:hash', async(req,res) => {
+
+  const { hash } = req.params;
+
+  // check database for hash
+  Entity = await rEntity(hash)
+  Entity.ent_elemental_Array = await binSplit(Entity.ent_elemental)
+  //console.log(Entity.ent_elemental_Array)
+                         // black     red       orange    yellow
+  bridgeColorArray     = ['#000000','#de0000','#d68110','#dbcc08',]
+  //transitionColorArray = ['#2f2f2f','#7a0303','#983900','#a6a200',]
+
+  var bridgeColor = bridgeColorArray[Entity.ent_color];
+  //    transitionColor = transitionColorArray[Entity.ent_color];
+
+
+
+  //res.status(200).send(Entity)
+  const block = await generateResponseBlock(`${Entity.ent_name}`,'<body>','<a href="/spiridex">spiridex//</a>') // UI Handler 2.0
+  var res_data = '';
+  res_data += `${block.generated}`
+
+  res_data += `${block_open}`
+  //res_data += `<h2 style="color: ${bridgeColor}; text-align: center;">${Entity.ent_name}</h2>`
+  res_data += `<div style="text-align: center;">${Entity.ent_description}</div>`
+  res_data += `<div class="spiricard spiricard${Entity.ent_color}"></div><br>`
+  res_data += `This is just a test`
+  res_data += `${block_close}`
+
+  //res_data += `${block_open}Entity Hash:<br><level>${EHash.hash}</level>${block_close}`
+  res_data += `${block.motd}`
+  res.status(200).send(res_data)
+
 })
 
 // VIEW :id

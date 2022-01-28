@@ -32,6 +32,7 @@
     "passport-discord": "^0.1.4",
     "sequelize": "^6.6.2",
     "socket.io": "^4.0.1",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.2",
+    "stripe": "^8.199.0"
   }
 }
