@@ -2,6 +2,7 @@ const express = require('express');
 const chalk = require('chalk');
 const gsmine = require('./gsmine')
 const newEHash = require('./newEHash')
+const SHA256 = require('crypto-js/sha256')
 
 require("dotenv").config();
 
@@ -375,6 +376,29 @@ const M = sequelize.define('mapdata', {
     allowNull: false,
   },
 });
+
+const PayDB = sequelize.define('paydb', {
+  user_id: {
+    type: Sequelize.STRING,
+    defaultValue: '0',
+    allowNull: false
+  },
+  hash: {
+    type: Sequelize.STRING,
+    unique: true,
+  },
+  silver: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+  },
+  gold: {
+    type: Sequelize.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+  }
+})
+
 // make a list from a user's zones to tether this to
 const Mission = sequelize.define('mission', {
   owner_id: {
@@ -556,6 +580,7 @@ const Spiridex = sequelize.define('spiridex', {
   }
 });
 M.sync(); // DEX MAP
+PayDB.sync(); // PAYMENT ROUTER
 Mission.sync(); // MISSIONS
 Rewards.sync(); // BANK REWARDS
 Users.sync(); // USER PROFILE
@@ -566,6 +591,41 @@ const block_open = `<blockquote>`
 const block_close = `</blockquote>`
 
 ////////////////////////////////////////////////////////////////////////////////
+// Experimental Payment Class / Promise Carriage
+class paymentPromise{
+  constructor(user, qtyxsilver, qtyxgold){
+    this.uid = user.user_id; // user id of user making payment
+    this.age = new Date().getTime(); // time of instance
+    this.hash = this.insertHash(); // a randomly generated hash
+    this.silver = qtyxsilver; // the amount of silver in the end
+    this.gold = qtyxgold; // the amount of gold in the end
+    this.write = this.insertPayBlock(); // write to database
+  }
+
+  insertHash(){
+    let h = SHA256(this.uid + this.age).toString();
+    return h
+  }
+
+  insertPayBlock(){
+    try {
+      const pay = PayDB.create({
+        user_id: this.uid,
+        hash: this.hash,
+        silver: this.silver,
+        gold: this.gold,
+      }).catch(e => {
+        //console.log(e)
+      })
+    } catch (e) {
+      // It shouldn't already exist
+    } finally {
+      console.log('Payment Block Generated')
+    }
+    return 1
+  }
+}
+
 // Listen Start
 X.listen(
   PORT,
@@ -681,7 +741,7 @@ X.get('/storefront', async (req, res) => {
     }
     res_data += `<br><br>`
   }
-  res_data += `<input type="button" onclick="returnStoreCheckout()" value="Purchase"></div>${block_close}`
+  res_data += `<input type="button" id="chkoutb" onclick="returnStoreCheckout()" value="Purchase"></div>${block_close}`
 
 
   res_data += `${block_open}Questions/Comments/Concerns regarding account, payment, code, please contact `
@@ -696,10 +756,21 @@ X.get('/storefront', async (req, res) => {
 
 X.post('/storefront/chkout', async (req, res) => {
   // payment mode can be subscription
+  var qtyxsilver = 0,
+      qtyxgold = 0;
+  // Check Authorization 2.0
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
+  // Retrieve User Data
+  user = await readPortalU(req.cookies.user_email)
+  // Collect item data
   reqData = Object.assign({},req.body)
   if (!reqData.chkout) return res.status(500).json({ error: 'Nothing to buy.' })
+  // Link and map store items
   lineItems = reqData.chkout.map(item => {
     const storeItem = storeclient[item.name]
+    qtyxsilver += (storeItem.itemCreditSilver * item.value);
+    qtyxgold += (storeItem.itemCreditGold * item.value);
     return {
       price_data: {
         currency: 'cad',
@@ -711,21 +782,54 @@ X.post('/storefront/chkout', async (req, res) => {
       quantity: item.value
     }
   })
+  let PayPromise = await new paymentPromise(user, qtyxsilver, qtyxgold);
+  console.log(`Payment Promise started for ${PayPromise.uid}`)
+  console.log(PayPromise)
+  // .hash, .uid, .silver, .gold, .age
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
       line_items: lineItems,
-      success_url: `${process.env.SERVER_URL}/storefront/paysuccess`,
+      success_url: `${process.env.SERVER_URL}/storefront/pay/${PayPromise.hash}/${PayPromise.uid}/${PayPromise.silver}/${PayPromise.gold}`,
       cancel_url: `${process.env.SERVER_URL}/storefront`
-    }).then((paymessage) => {
-      console.log('SUCCESS!')
-      console.log(paymessage)
     })
+    // Add: QTY x Items, add total GOLD+SILVER to variables, parse through paymentBlock.
+    // Get paymentBlock class to generate block information SQL-side.
+    // For now let's look at some data with a console log.
+    //let UserPaymentSession = await new paymentBlock(session, user)
+    //console.log(UserPaymentSession)
     res.json({ url: session.url })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
+})
+
+X.get('/storefront/pay/:hash/:uid/:silver/:gold', async (req, res) => {
+  // Check Authorization 2.0
+  flag = await checkAuthorization(req.cookies.user_email, req.cookies.hashed_pwd)
+  if (!flag) return res.status(401).send({error: "UNAUTHORIZED / HASH ERROR / NOT LOGGED IN"})
+  // Retrieve User Data
+  user = await readPortalU(req.cookies.user_email)
+  const { hash, uid, silver, gold } = req.params;
+
+  paymentBlock = await PayDB.findOne({ where: { hash: hash }})
+  if (!paymentBlock) return res.status(404).send({error: "Cannot find hash. Please contact shadowsword@protonmail.com if you believe there was an issue with payment."})
+  if (user.user_id != uid || user.user_id != paymentBlock.user_id) return res.status(400).send({error: "Bad Request."})
+  if (paymentBlock.silver != silver) return res.status(400).send({error: "Invalid Silver Request."})
+  if (paymentBlock.gold != gold) return res.status(400).send({error: "Invalid Gold Request."})
+  modifyUserBlock = await Users.update({gold: user.gold + paymentBlock.gold, silver: user.silver + paymentBlock.silver},{where:{user_id: user.user_id}})
+  modifyPaymentBlock = await PayDB.update({silver: 0, gold: 0},{where:{hash: paymentBlock.hash}})
+  console.log(`${paymentBlock.gold}G ${paymentBlock.silver}S added to ${user.user_id} account`)
+  const block = await generateResponseBlock('payment','<body>','<a href="/ucp">UCP//</a>')// UI Handler 2.0
+  res_data = block.generated;
+  res_data += `${block_open}<div class="loginbox">`
+  res_data += `The payment was successful, and ${paymentBlock.gold}G / ${paymentBlock.silver}S were added to your Avaira Account.<br><br>`
+  res_data += `${user.gold}G <b>=> ${user.gold + paymentBlock.gold}G</b><br>`
+  res_data += `${user.silver}S <b>=> ${user.silver + paymentBlock.silver}S</b><br><br>`
+  res_data += `<a href="/storefront" class="phasedYel">Return</a>`
+  res_data += `</div>${block_close}`
+  res.status(200).send(res_data)
 })
 
 /// AUTH START /////////////////////////////////////////////////////////////////
@@ -1315,7 +1419,7 @@ X.get('/ucp', async (req, res) => {
     }
 
     res_data += `<gold>${ownedGoldValue} G</gold>, ${ownedSilverValue} S <gold>in ${Properties} Nodes</gold><br>`
-    res_data += `<a href="/bank" class="phasedYel">Generate Gold</a>&nbsp;&nbsp;<a href="/spiridex" class="phased">Enter Spiridex</a>`
+    res_data += `<a href="/bank" class="phasedYel">Generate Gold</a>&nbsp;&nbsp;<a href="/spiridex" class="phased">Enter Spiridex</a> <a href="/storefront" class="phasedRed">Store</a>`
     res_data += `${block_close}</div>`
 
     console.log(chalk.yellowBright('200 /ucp',req.cookies.user_email))
