@@ -1382,7 +1382,7 @@ X.get('/ucp', async (req, res) => {
     res_data += `${header}`
 
     res_data += `<body>` // top left elements
-    res_data += `<div class='display-topleft'><span title="Home"><a href="https://shadowsword.ca/">shadowsword.ca//</a></span>`
+    res_data += `<div class='display-topleft'><span title="Home"><a href="/">etherography//</a></span>`
     res_data += `<span title="Information"><a href="/">DEX//</a></span>User Control Panel ${pub_ver}</div>`
 
     res_data += `${top_head}` // logo
@@ -1623,9 +1623,7 @@ X.get('/view/:id', async (req, res) => {
     // ADD TO COLLECTION HERE
     // THEN CHANGE CDN.SHADOWSWORD DEX UTIL JS (LINE 22+)
     ident_img_array = [
-      '1_city','2_nIV','3_spar','4_spar','5_spar','6_defconstruct',
-      '7_railgun','8_nithya','9_dark','10_arirealm','11_arigate','12_NULL','13_astragate','14_lightgate','15_construct','16_wormhole',
-      '17_star','18_star','19_other','20_void','21_star','22_blacksand','23_blacksand','24_protected'
+      'yen','dollar','euro','pound'
     ]
 
     if (!BYTE.identity) {
@@ -1647,13 +1645,13 @@ X.get('/view/:id', async (req, res) => {
       var ownerlink = `<a href="/user/${BYTE.owner_id}">`, linkclose = `</a>`
     }
 
-    ident_img = `${ident_img_array[BYTE.identity-1]}.gif`
+    ident_img = `${ident_img_array[BYTE.identity-1]}.svg`
 
     var box_provider = '';
     if (req.cookies.user_email && req.cookies.hashed_pwd) var box_provider = `<a onclick="poptoast('ebox')"><span style="font-family: devicons; font-weight: normal; font-style: normal; font-size: 25px;" ><green>&#xe664;</green></span></a>`;
 
     var disp_right = '';
-    disp_right = `<div class="display-corner-right"><img src="https://cdn.shadowsword.ca/avaira/${ident_img}">`
+    disp_right = `<div class="display-corner-right"><img src="/pub/${ident_img}" width="100" height="100">`
     disp_right += `<div class="bottom-right"><span title="Identity">(${BYTE.identity})</span></div>`
     disp_right += `<div class="top-gold"><span title="Cost Gold">${BYTE.gold} G</span></div>`
     disp_right += `<div class="top-edgebar"><span title="Controls">${box_provider}</span></div>`

@@ -4,6 +4,11 @@
     <div class="dsp"><br>
       <label for="identity">&nbsp;<div class="extrusionbase"><b>ID</b><span class="extrude">Sets the node's image/target.</span></div></label>
       <select id="identity" name="identity" onchange="return pushValue('idbox', this)">
+        <option value="1" label="yen">
+        <option value="2" label="dollar">
+        <option value="3" label="euro">
+        <option value="4" label="pound">
+        <!--
         <option value="1" label="City">
         <option value="2" label="Sparring Area (I)">
         <option value="3" label="Sparring Area (II)">
@@ -27,6 +32,7 @@
         <option value="21" label="Star (III)">
         <option value="24" label="Protected Gateway">
         <option value="20" label="Void">
+        -->
       </select>
       <span id="idbox"></span>
       <br><br>
@@ -40,7 +46,7 @@
 
       <br><br>
       <div class="display-corner-right">
-        <img id="display" src="https://cdn.shadowsword.tk/avaira/16_wormhole.gif">
+        <img id="display" src="/pub/dollar.svg">
         <div class="top-gold"><span id="cost_gold"></span> <gold>G</gold></div>
         <div class="top-silver"><span id="top-silv"></span> S</div>
         <div id="submitbox">

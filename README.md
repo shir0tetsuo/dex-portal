@@ -1,6 +1,12 @@
 # dex-portal
 REST API + Express + Sqlite3 "Realm/Node/Property" Database served on HTML
 
+# Dec. 7, 2023
+Working local copy (beta test) only. Pulled directly from the remains from the server. This is the **last** v1 update. A few bugs were fixed, there is now an example.env for quicker setup though it's not well documented. You can see a working version of this in the uploaded screenshot. This is based on what is now relatively old dependencies; As-is, this is no longer a very useful tool, but good examples exist for some still relevant extensions such as Stripe. TL;DR, this is a janky "working" "dex-portal", which is posted for reference, and has since become obsolete by newer systems.
+
+# V3
+Third gen. might be constructed in a separate system, data management inspiration from the hcfs tool.
+
 # What It Does
 The Avaira bot is able to register "legacy" accounts linked to a discord userid. This is done for cross-use purposes.
 
