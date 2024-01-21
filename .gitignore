@@ -5,3 +5,4 @@ avaira_*
 *.junk.*
 test.js
 .env
+unused/
